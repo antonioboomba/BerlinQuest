@@ -59,8 +59,6 @@ export interface PropInfo {
 export interface AssetManifest {
   characters?: Record<string, ManifestEntry>;
   props?: Record<string, PropEntry>;
-  /** variantes de edificios generados por el motor (p. ej. spaeti_house); desactivadas → edificio anterior */
-  buildings?: Record<string, { enabled: boolean }>;
 }
 
 /** Tamaño máximo de un objeto externo (evita cargar ilustraciones a alta resolución por error). */
