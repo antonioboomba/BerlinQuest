@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #0a0a12;
+  --color-panel: #12121d;
+  --color-panel2: #1a1a29;
+  --color-line: #2a2a3f;
+  --color-acid: #39ff88;
+  --color-acid-dim: #1f8f4e;
+  --color-violet: #a855f7;
+  --color-violet-dim: #6b2fa8;
+  --color-muted: #8d8daa;
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "JetBrains Mono", Consolas, monospace;
+
+  --animate-rise: rise 0.35s ease-out both;
+  --animate-pop: pop 0.4s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  --animate-float: float 4s ease-in-out infinite;
+  --animate-blink: blink 1.2s steps(2) infinite;
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes pop {
+    from { opacity: 0; transform: scale(0.85); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  @keyframes blink {
+    to { opacity: 0.2; }
+  }
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html, body, #root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-ink);
+  color: #ecebf5;
+  font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background-image:
+    radial-gradient(circle at 15% 0%, rgb(168 85 247 / 0.12), transparent 40%),
+    radial-gradient(circle at 90% 100%, rgb(57 255 136 / 0.07), transparent 40%);
+  background-attachment: fixed;
+}
+
+/* Rejilla sutil tipo "plano" */
+.grid-bg {
+  background-image:
+    linear-gradient(rgb(255 255 255 / 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.025) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.glow-acid { box-shadow: 0 0 0 1px rgb(57 255 136 / 0.4), 0 0 24px -4px rgb(57 255 136 / 0.45); }
+.glow-violet { box-shadow: 0 0 0 1px rgb(168 85 247 / 0.45), 0 0 24px -4px rgb(168 85 247 / 0.5); }
+
+.scrollbar-thin { scrollbar-width: thin; scrollbar-color: #2a2a3f transparent; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
