@@ -57,7 +57,7 @@ function fresh(): SaveData {
   return {
     version: 2,
     name: 'Alex',
-    xp: 20,
+    xp: 0,
     money: 48,
     inventory: ['handy', 'schluessel', 'reisepass', 'kellnerblock'],
     vocab: {},
@@ -134,8 +134,10 @@ class GameStateImpl extends Phaser.Events.EventEmitter {
     this.save();
   }
 
+  /** El personaje empieza en el nivel 0 (con 100 XP pasa al 1, igual que antes del 1 al 2). */
   get level() {
-    return levelFromXp(this.data.xp);
+    const l = levelFromXp(this.data.xp);
+    return { ...l, level: l.level - 1 };
   }
 
   addXp(base: number): number {
