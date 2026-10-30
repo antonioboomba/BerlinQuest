@@ -242,6 +242,17 @@ export class StreetScene extends WorldScene {
     this.placeProp('litfass', 20.6, 10.4, { block: 0.8 });
     this.placeProp(this.propKey('bike_green_cargo', 'bike_green'), 17.2, 9.55, { block: [0.9, 0.4] });
     this.placeProp(this.propKey('bike_red_locked', 'bike_red'), 18.1, 9.55, { block: [0.9, 0.4] });
+    // más bicis aparcadas (sin dos iguales seguidas; lejos de puertas, del puesto y de la ruta de Jonas)
+    const bikes: [string, string, number, number][] = [
+      ['bike_red_locked', 'bike_red', 10.4, 4.75],
+      ['bike_turquoise', 'bike_blue', 11.3, 4.75],
+      ['bike_black_basket', 'bike_blue', 21.6, 4.75],
+      ['bike_green_cargo', 'bike_green', 22.5, 4.75],
+      ['bike_turquoise', 'bike_red', 14.3, 12.2],
+      ['bike_red_locked', 'bike_red', 15.2, 12.2],
+      ['bike_black_basket', 'bike_blue', 22.3, 9.55],
+    ];
+    for (const [ext, proc, x, y] of bikes) this.placeProp(this.propKey(ext, proc), x, y, { block: [0.9, 0.4] });
     this.placeProp('bench', 7.6, 12.2, { block: [1.6, 0.5] });
     this.placeProp('bench', 18.4, 12.2, { block: [1.6, 0.5] });
     this.placeProp('bin', 9.5, 12.3, { block: 0.4 });
