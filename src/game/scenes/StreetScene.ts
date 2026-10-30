@@ -233,11 +233,10 @@ export class StreetScene extends WorldScene {
     this.placeProp('bin', 5.6, 4.6, { block: 0.4 });
     this.placeProp(this.propKey('planter_berlin', 'planter0'), 6.6, 4.55, { block: this.registry.get('prop:planter_berlin') ? [1.2, 0.4] : 0.5 });
     this.placeProp(this.propKey('planter_berlin', 'planter1'), 9.4, 4.55, { block: this.registry.get('prop:planter_berlin') ? [1.2, 0.4] : 0.5 });
-    this.placeProp('terrace_table', 12.9, 4.75, { block: 0.6 });
+    this.placeProp(this.propKey('table_berlin', 'terrace_table'), 12.9, 4.75, { block: 0.6 });
     this.placeProp('chair', 13.5, 4.85);
-    this.placeProp('terrace_table', 16.4, 4.75, { block: 0.6 });
+    this.placeProp(this.propKey('table_berlin', 'terrace_table'), 16.4, 4.75, { block: 0.6 });
     this.placeProp('chair', 15.8, 4.85, { flip: true });
-    this.placeProp('chalkboard', 17.4, 5.0, { block: 0.4 });
     this.placeProp('bin', 23.4, 4.6, { block: 0.4 });
     // acera sur y plaza
     for (const x of [9.5, 10.5, 11.5]) this.placeProp('bollard', x, 9.2, { block: 0.25 });
