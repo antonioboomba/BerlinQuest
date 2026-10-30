@@ -1,5 +1,4 @@
-import { buildingArt, flatTop, isoBox, type BuildingSpec } from '../art/buildings';
-import { pixelText, textWidth } from '../art/font';
+import { buildingArt, type BuildingSpec } from '../art/buildings';
 import { FACADES, PAL } from '../art/palette';
 import { makeCanvas, poly, px, rect, shade } from '../art/pixel';
 import { depthOf, HALF_H, HALF_W, TILE_H, TILE_W, toScreen } from '../iso';
@@ -61,7 +60,6 @@ export class StreetScene extends WorldScene {
     this.buildBuildings();
     this.buildStreetFurniture();
     this.buildUbahn(3, 10);
-    this.buildImbiss(14, 10.2);
     this.buildCanal();
     this.spawnNpcs();
 
@@ -255,49 +253,100 @@ export class StreetScene extends WorldScene {
     );
   }
 
-  /** Boca de metro: hueco con escaleras, barandillas verdes y dos señales. */
+  /**
+   * Boca de metro: hueco en la acera con escalera de granito que baja hacia el sur, muro lateral de piedra,
+   * remate claro alrededor y barandillas verde oscuro (oeste, este y sur; se entra por el norte).
+   */
   private buildUbahn(x0: number, y0: number) {
     const wx = 2;
     const wy = 2;
     const top = 30;
     const W = (wx + wy) * HALF_W;
     const { canvas, ctx } = makeCanvas(W, (wx + wy) * HALF_H + top + 2);
-    const D: [number, number] = [wy * HALF_W, top];
-    const C: [number, number] = [W, top + wx * HALF_H];
-    const B: [number, number] = [wx * HALF_W, top + (wx + wy) * HALF_H];
-    const A: [number, number] = [0, top + wy * HALF_H];
-    poly(ctx, [D, C, B, A], '#2a2238');
-    // peldaños bajando desde el borde trasero
-    for (let i = 1; i < 9; i++) {
-      const t = i / 9;
-      const ax = D[0] + (A[0] - D[0]) * t;
-      const ay = D[1] + (A[1] - D[1]) * t;
-      for (let u = 0; u < wx * HALF_W; u++) {
-        rect(ctx, ax + u, ay + u / 2 + i * 1.5, 1, 2, shade('#9a96aa', 1 - i * 0.07));
-        px(ctx, ax + u, ay + u / 2 + i * 1.5 + 2, '#5a5770');
+    // proyección local: u a lo largo de x, v a lo largo de y, z altura en píxeles
+    const P = (u: number, v: number, z = 0): [number, number] => [wy * HALF_W + (u - v) * HALF_W, top + (u + v) * HALF_H - z];
+    const quad = (pts: [number, number, number][], c: string) => poly(ctx, pts.map(([u, v, z]) => P(u, v, z)), c);
+    const T = 0.14; // grosor del muro y del remate
+    const STEPS = 10;
+    const RISE = 5;
+    const run = (wy - T) / STEPS;
+    // ── interior del hueco, recortado a la abertura ──
+    ctx.save();
+    ctx.beginPath();
+    for (const [i, q] of ([[T, 0], [wx - T, 0], [wx - T, wy - T], [T, wy - T]] as [number, number][]).entries()) {
+      const [x, y] = P(q[0], q[1]);
+      if (i) ctx.lineTo(x, y);
+      else ctx.moveTo(x, y);
+    }
+    ctx.closePath();
+    ctx.clip();
+    // muro oeste (cara interior, mira hacia +x): sillares que se oscurecen con la profundidad
+    const deep = STEPS * RISE + 12;
+    quad([[T, 0, 0], [T, wy, 0], [T, wy, -deep], [T, 0, -deep]], '#4a4656');
+    for (let row = 0; row * 6 < deep; row++)
+      for (let k = 0; k < 8; k++) {
+        const v0 = (k + (row % 2) * 0.5) * (wy / 7);
+        const z = -row * 6;
+        quad([[T, v0, z - 1], [T, v0 + wy / 7 - 0.02, z - 1], [T, v0 + wy / 7 - 0.02, z - 5], [T, v0, z - 5]], shade('#6a6476', 1 - row * 0.05));
+      }
+    // peldaños de lejos (arriba) a cerca (abajo): huella clara con canto gastado y contrahuella en sombra
+    for (let k = 0; k < STEPS; k++) {
+      const v0 = k * run;
+      const v1 = v0 + run;
+      const z = -k * RISE;
+      const t = k / STEPS;
+      quad([[T, v0, z], [wx - T, v0, z], [wx - T, v1, z], [T, v1, z]], shade('#77727f', 1 - t * 0.35));
+      quad([[T, v0, z], [wx - T, v0, z], [wx - T, v0 + 0.03, z], [T, v0 + 0.03, z]], shade('#b4aeb8', 1 - t * 0.3)); // canto
+      quad([[T, v1, z], [wx - T, v1, z], [wx - T, v1, z - RISE], [T, v1, z - RISE]], shade('#45414f', 1 - t * 0.3)); // contrahuella
+      for (let i = 0; i < 4; i++) {
+        const [x, y] = P(T + 0.2 + ((k * 7 + i * 5) % 16) / 10, v0 + 0.015, z);
+        px(ctx, Math.round(x), Math.round(y), shade('#8e8896', 1 - t * 0.3)); // desgaste del canto
       }
     }
+    ctx.restore();
+    // ── remate de piedra clara alrededor del hueco (al nivel de la acera) ──
+    const cope = '#bdb6be';
+    const copeEdge = '#857e8e';
+    quad([[0, 0, 0], [T, 0, 0], [T, wy, 0], [0, wy, 0]], cope); // oeste
+    quad([[wx - T, 0, 0], [wx, 0, 0], [wx, wy, 0], [wx - T, wy, 0]], cope); // este
+    quad([[0, wy - T, 0], [wx, wy - T, 0], [wx, wy, 0], [0, wy, 0]], cope); // sur
+    quad([[T, 0, 0], [wx - T, 0, 0], [wx - T, 0.04, 0], [T, 0.04, 0]], '#d8d2d6'); // borde del primer peldaño
+    quad([[T, 0, 0], [T, wy - T, 0], [T + 0.02, wy - T, 0], [T + 0.02, 0, 0]], copeEdge);
+    quad([[wx - T, wy - T, 0], [T, wy - T, 0], [T, wy - T - 0.02, 0], [wx - T, wy - T - 0.02, 0]], copeEdge);
+    // ── barandillas ──
+    const green = '#2c4a3a';
+    const greenLight = '#4f7e62';
+    const greenDark = '#1c3226';
     const rail = (a: [number, number], b: [number, number]) => {
-      const n = Math.max(Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1]));
+      const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      const posts = Math.max(2, Math.round(len / 0.33) + 1);
+      for (let i = 0; i < posts; i++) {
+        const f = i / (posts - 1);
+        const [x, y] = P(a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f);
+        rect(ctx, Math.round(x) - 1, Math.round(y) - 22, 2, 22, green);
+        px(ctx, Math.round(x) - 1, Math.round(y) - 21, greenLight);
+        rect(ctx, Math.round(x) - 2, Math.round(y) - 1, 4, 1, greenDark); // pie atornillado al remate
+      }
+      const n = Math.ceil(Math.max(Math.abs(P(...b)[0] - P(...a)[0]), Math.abs(P(...b)[1] - P(...a)[1])));
       for (let i = 0; i <= n; i++) {
-        const x = a[0] + ((b[0] - a[0]) * i) / n;
-        const y = a[1] + ((b[1] - a[1]) * i) / n;
-        rect(ctx, x, y - 22, 1, 2, '#5f9a78');
-        rect(ctx, x, y - 12, 1, 1, PAL.railGreen);
-        if (i % 10 === 0) rect(ctx, x, y - 22, 2, 22, PAL.railGreen);
+        const f = i / n;
+        const [x, y] = P(a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f);
+        rect(ctx, Math.round(x), Math.round(y) - 24, 1, 2, i % 9 === 4 ? '#6f9a80' : greenLight); // pasamanos con brillo
+        px(ctx, Math.round(x), Math.round(y) - 22, greenDark);
+        px(ctx, Math.round(x), Math.round(y) - 12, green); // travesaño
       }
     };
-    rail(A, B);
-    rail(D, A);
-    rail(C, B);
+    rail([T / 2, 0.2], [T / 2, wy - T / 2]);
+    rail([T / 2, wy - T / 2], [wx - T / 2, wy - T / 2]);
+    rail([wx - T / 2, 0.2], [wx - T / 2, wy - T / 2]);
     if (!this.textures.exists('ubahn_entrance')) this.textures.addCanvas('ubahn_entrance', canvas);
     const s = toScreen(x0, y0);
     this.add.image(s.x - wy * HALF_W, s.y - top, 'ubahn_entrance').setOrigin(0, 0).setDepth(depthOf(x0 + wx, y0 + wy) - 16);
     const g = toScreen(x0 + 1, y0 + 1);
-    this.addGlow(g.x, g.y, '#ffe0b0', 50, 0.4, depthOf(x0, y0));
+    this.addGlow(g.x, g.y + 10, '#ffe0b0', 46, 0.35, depthOf(x0, y0)); // luz cálida que sube de la estación
     this.collision.add(x0, y0 + 0.1, x0 + wx, y0 + wy);
+    // una sola señal junto a la entrada (la segunda, al otro lado, era redundante)
     this.placeProp('ubahn_sign', x0 - 0.45, y0 - 0.2, { block: 0.3 });
-    this.placeProp('ubahn_sign', x0 + wx + 0.35, y0 + wy - 0.2, { block: 0.3 });
     const entry = { x: x0 + 1, y: y0 - 0.35 };
     const ubahnOpen = () => (GameState.isActive('unterwegs') && !GameState.isActive('unterwegs', 'invite')) || GameState.isDone('unterwegs');
     this.interactables.push({
@@ -309,36 +358,6 @@ export class StreetScene extends WorldScene {
     });
     this.pois.push({ ...entry, icon: 'U', label: 'U-Bahn' });
     this.minimap.push({ rect: { x0, y0, x1: x0 + wx, y1: y0 + wy }, color: 0x2a5ad8 });
-  }
-
-  /** Puesto de currywurst: caja isométrica con mostrador, toldo y letrero. */
-  private buildImbiss(x0: number, y0: number) {
-    const wx = 2;
-    const wy = 1;
-    const H = 70;
-    const front = makeCanvas(wx * HALF_W, H);
-    const f = front.ctx;
-    rect(f, 0, 0, wx * HALF_W, H, '#ffd77a');
-    rect(f, 0, 24, wx * HALF_W, 22, '#fff0bf');
-    rect(f, 4, 28, wx * HALF_W - 8, 14, '#3a2418');
-    for (let x = 6; x < wx * HALF_W - 6; x += 7) rect(f, x, 33, 4, 3, '#e8333a'); // salchichas
-    rect(f, 0, 46, wx * HALF_W, 4, '#c94a4a');
-    rect(f, 0, 50, wx * HALF_W, H - 50, '#e0675a');
-    for (let x = 0; x < wx * HALF_W; x++) rect(f, x, 14, 1, 10, Math.floor(x / 6) % 2 ? '#c8283c' : '#ffffff');
-    const label = 'CURRYWURST';
-    rect(f, 2, 1, wx * HALF_W - 4, 12, '#2a2238');
-    pixelText(f, label, Math.round((wx * HALF_W - textWidth(label)) / 2), 4, '#ffd77a');
-    const side = makeCanvas(wy * HALF_W, H);
-    rect(side.ctx, 0, 0, wy * HALF_W, H, shade('#ffd77a', 0.78));
-    rect(side.ctx, 0, 50, wy * HALF_W, H - 50, shade('#e0675a', 0.78));
-    const art = isoBox(wx, wy, H, { canvas: front.canvas }, { canvas: side.canvas }, flatTop('#e6e1ea', '#ffffff'));
-    if (!this.textures.exists('imbiss')) this.textures.addCanvas('imbiss', art.canvas);
-    const s = toScreen(x0, y0);
-    this.add.image(s.x - art.anchorX, s.y - art.anchorY, 'imbiss').setOrigin(0, 0).setDepth(depthOf(x0 + wx / 2, y0 + wy));
-    this.addGlow(toScreen(x0 + 1, y0 + 1).x, toScreen(x0 + 1, y0 + 1).y - 40, PAL.lampGlow, 60, 0.4, depthOf(x0 + 1, y0 + 1.1));
-    this.collision.add(x0, y0, x0 + wx, y0 + wy);
-    this.interactables.push({ x: x0 + 1, y: y0 + wy + 0.45, radius: 1.2, label: () => 'Pedir en el Imbiss', action: () => this.ui.openDialog('imbiss') });
-    this.minimap.push({ rect: { x0, y0, x1: x0 + wx, y1: y0 + wy }, color: 0xffd77a });
   }
 
   private buildCanal() {
@@ -448,7 +467,7 @@ export class StreetScene extends WorldScene {
   }
 }
 
-function groundKind(x: number, y: number): string | null {
+function groundKind(_x: number, y: number): string | null {
   if (y <= 4) return 'slab';
   if (y === 5) return 'curb';
   if (y >= 6 && y <= 8) return 'cobble';

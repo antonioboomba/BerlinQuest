@@ -189,19 +189,43 @@ export function planter(seed: number): PropArt {
 
 /** Señal de U-Bahn: cuadrado azul con «U» blanca sobre poste. */
 export function ubahnSign(): PropArt {
-  const { canvas, ctx } = makeCanvas(40, 104);
-  groundShadow(ctx, 20, 101, 8, 2);
-  rect(ctx, 18, 36, 5, 66, '#5a5a6a');
-  rect(ctx, 18, 36, 2, 66, '#7a7a8a');
-  rect(ctx, 2, 0, 36, 36, '#ffffff');
-  rect(ctx, 4, 2, 32, 32, PAL.ubahnBlue);
-  rect(ctx, 4, 2, 32, 3, '#5a86ff');
-  rect(ctx, 11, 8, 5, 17, '#ffffff');
-  rect(ctx, 24, 8, 5, 17, '#ffffff');
-  rect(ctx, 13, 23, 14, 5, '#ffffff');
-  rect(ctx, 11, 22, 3, 3, '#ffffff');
-  rect(ctx, 26, 22, 3, 3, '#ffffff');
-  return done(canvas, ctx, [{ x: 0, y: -84, color: PAL.neonBlue, r: 46 }]);
+  // señal de U-Bahn berlinesa: placa azul con marco metálico y tornillos, sobre un poste fino de metal oscuro
+  const { canvas, ctx } = makeCanvas(34, 116);
+  groundShadow(ctx, 17, 113, 7, 2);
+  // poste con base atornillada
+  rect(ctx, 15, 32, 4, 80, '#3a3c48');
+  rect(ctx, 15, 32, 1, 80, '#6a6e7c');
+  rect(ctx, 18, 32, 1, 80, '#25262f');
+  rect(ctx, 12, 108, 10, 4, '#3a3c48');
+  rect(ctx, 12, 108, 10, 1, '#6a6e7c');
+  for (const [x, y] of [[16, 60], [17, 61], [16, 88]]) px(ctx, x, y, '#8a5a3a'); // óxido
+  // abrazaderas del poste
+  rect(ctx, 14, 33, 6, 2, '#5a5c68');
+  // marco metálico (con canto en sombra a la derecha y abajo: volumen)
+  rect(ctx, 1, 1, 32, 32, '#c9ccd6');
+  rect(ctx, 31, 2, 2, 31, '#8a8e9c');
+  rect(ctx, 2, 31, 31, 2, '#8a8e9c');
+  rect(ctx, 1, 1, 32, 1, '#eef0f6');
+  // placa azul
+  rect(ctx, 4, 4, 26, 26, PAL.ubahnBlue);
+  rect(ctx, 4, 4, 26, 2, '#3d6cf0');
+  rect(ctx, 4, 28, 26, 2, '#1c3aa8');
+  // U blanca, gruesa y legible
+  rect(ctx, 10, 8, 5, 14, '#ffffff');
+  rect(ctx, 19, 8, 5, 14, '#ffffff');
+  rect(ctx, 12, 21, 10, 5, '#ffffff');
+  rect(ctx, 10, 20, 3, 3, '#ffffff');
+  rect(ctx, 21, 20, 3, 3, '#ffffff');
+  rect(ctx, 14, 25, 6, 1, '#d8e0f8');
+  // tornillos y desgaste
+  for (const [x, y] of [[3, 3], [30, 3], [3, 30], [30, 30]]) {
+    px(ctx, x, y, '#5a5c68');
+    px(ctx, x - 1, y - 1, '#ffffff');
+  }
+  for (const [x, y] of [[7, 26], [26, 6], [27, 7], [5, 15]]) px(ctx, x, y, '#4f78e8');
+  rect(ctx, 15, 70, 4, 5, '#f2ece4'); // resto de pegatina en el poste
+  px(ctx, 16, 72, '#c0392b');
+  return done(canvas, ctx, [{ x: 0, y: -98, color: PAL.neonBlue, r: 40 }]);
 }
 
 /** Columna de anuncios (Litfaßsäule). */
@@ -243,13 +267,35 @@ export function chalkboard(lines: string[]): PropArt {
 
 /** Placa de calle sobre poste. */
 export function streetSign(name: string): PropArt {
-  const w = textWidth(name, 2) + 14;
-  const { canvas, ctx } = makeCanvas(w + 2, 86);
-  groundShadow(ctx, w / 2, 83, 6, 2);
-  rect(ctx, Math.floor(w / 2) - 2, 20, 5, 64, '#5a5a6a');
-  rect(ctx, 1, 1, w, 20, '#ffffff');
-  rect(ctx, 3, 3, w - 4, 16, '#2a2238');
-  pixelText(ctx, name, 8, 6, '#ffffff', 2);
+  // placa de calle de metal envejecido: blanca con filete negro, tornillos, óxido y una pegatina
+  const w = textWidth(name, 2) + 16;
+  const { canvas, ctx } = makeCanvas(w + 3, 96);
+  const cx = Math.floor(w / 2);
+  groundShadow(ctx, cx, 93, 6, 2);
+  rect(ctx, cx - 2, 22, 4, 70, '#3a3c48'); // poste como el de la farola y la señal de U-Bahn
+  rect(ctx, cx - 2, 22, 1, 70, '#6a6e7c');
+  rect(ctx, cx + 1, 22, 1, 70, '#25262f');
+  rect(ctx, cx - 4, 88, 8, 4, '#3a3c48');
+  rect(ctx, cx - 4, 88, 8, 1, '#6a6e7c');
+  px(ctx, cx - 1, 54, '#8a5a3a');
+  px(ctx, cx, 70, '#8a5a3a');
+  // placa con canto (volumen)
+  rect(ctx, 1, 1, w, 22, '#e8e3d8');
+  rect(ctx, w - 1, 2, 3, 22, '#a9a59c');
+  rect(ctx, 2, 22, w, 2, '#a9a59c');
+  rect(ctx, 1, 1, w, 1, '#ffffff');
+  rect(ctx, 4, 4, w - 6, 1, '#1c1a22'); // filete negro
+  rect(ctx, 4, 19, w - 6, 1, '#1c1a22');
+  rect(ctx, 4, 4, 1, 16, '#1c1a22');
+  rect(ctx, w - 3, 4, 1, 16, '#1c1a22');
+  pixelText(ctx, name, 9, 8, '#1c1a22', 2);
+  // tornillos, manchas de óxido y una pegatina
+  for (const x of [2, w - 2]) {
+    px(ctx, x, 12, '#7a7a86');
+  }
+  for (const [x, y] of [[6, 18], [7, 18], [w - 6, 6], [w - 7, 17]]) px(ctx, x, y, '#b07a4a');
+  rect(ctx, cx - 2, 40, 4, 6, '#ff5fd6'); // pegatina en el poste
+  rect(ctx, cx - 1, 41, 2, 1, '#ffd0f0');
   return done(canvas, ctx);
 }
 
