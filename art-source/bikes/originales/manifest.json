@@ -1,0 +1,46 @@
+{
+  "pack": "Berlin Quest Kreuzberg bikes 01",
+  "status": "art_assets_not_integrated",
+  "items": [
+    {
+      "filename": "bike_black_basket.png",
+      "dimensions": [
+        684,
+        629
+      ],
+      "transparent": true,
+      "anchor_suggestion": "center_bottom",
+      "scaled_in_game": false
+    },
+    {
+      "filename": "bike_turquoise.png",
+      "dimensions": [
+        569,
+        632
+      ],
+      "transparent": true,
+      "anchor_suggestion": "center_bottom",
+      "scaled_in_game": false
+    },
+    {
+      "filename": "bike_green_cargo.png",
+      "dimensions": [
+        701,
+        576
+      ],
+      "transparent": true,
+      "anchor_suggestion": "center_bottom",
+      "scaled_in_game": false
+    },
+    {
+      "filename": "bike_red_locked.png",
+      "dimensions": [
+        573,
+        579
+      ],
+      "transparent": true,
+      "anchor_suggestion": "center_bottom",
+      "scaled_in_game": false
+    }
+  ]
+}
