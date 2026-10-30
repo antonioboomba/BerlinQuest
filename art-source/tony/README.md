@@ -44,9 +44,9 @@ En http://localhost:5173/sprite-test.html:
 3. Clic en el espacio **16** → «Cargar fotogramas sueltos» → los cuatro archivos 16–19.
 4. Revisar análisis y vista previa → «Exportar player.png».
 
-## Pendiente para la activación (requiere tocar el motor)
+## Estado: activado
 
-El personaje actual del juego sostiene los objetos con el brazo extendido a un lado (mano en 43, 46);
-Tony los sostiene delante del cuerpo (mano en ≈ 24, 50). Para que la bebida aparezca en la mano de
-Tony hará falta una posición de mano opcional por personaje en `manifest.json`
-(sin efecto en los demás personajes). Se medirá sobre los fotogramas definitivos.
+`public/assets/characters/player.png` = `tony_candidata_final_960x88.png` (7 fotogramas corregidos en
+`corregidos/`, frame 19 redibujado en `frame19/` con las zapatillas del F10). En `manifest.json`,
+`enabled: true` y `hand` (front [31, 62], back [39, 56]) para que bebidas y objetos queden en su mano.
+Para volver al personaje anterior: `enabled: false`.

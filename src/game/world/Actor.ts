@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { FOOT_PAD, HAND } from '../art/characters';
+import { FOOT_PAD, FRAME_H, FRAME_W, HAND } from '../art/characters';
+import type { HandAnchor } from '../art/sprites';
 import { depthOf, facingFromWorld, toScreen, type Facing } from '../iso';
 import type { Pt } from './Collision';
 
@@ -158,8 +159,12 @@ export class Actor {
     if (this.held) {
       const front = this.facing.startsWith('S');
       const flip = this.facing.endsWith('W');
-      const ox = (front ? HAND.x : HAND.x - 4) * (flip ? -1 : 1);
-      this.held.setPosition(Math.round(s.x + ox), Math.round(s.y + HAND.y + 12));
+      // posición de la mano del PNG externo (manifiesto), en píxeles del frame; si no, la del arte procedural
+      const hand = this.scene.registry.get(`hand:${this.key}`) as HandAnchor | undefined;
+      const a = hand ? (front ? hand.front : hand.back) : null;
+      const ox = (a ? a.x - FRAME_W / 2 : front ? HAND.x : HAND.x - 4) * (flip ? -1 : 1);
+      const oy = a ? a.y - (FRAME_H - FOOT_PAD) : HAND.y + 12;
+      this.held.setPosition(Math.round(s.x + ox), Math.round(s.y + oy));
       // siempre visible: también de espaldas se ve lo que lleva en la mano
       this.held.setDepth(d + 0.6);
     }

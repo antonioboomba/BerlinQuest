@@ -47,4 +47,10 @@ Arranca `npm run dev` y abre http://localhost:5173/sprite-test.html
 
 En `public/assets/manifest.json`, cambia `"enabled": false` por `"enabled": true` en la entrada `player`.
 Si el archivo falta o no mide 960 × 88, el juego vuelve automáticamente al arte procedural.
+Para volver al personaje anterior basta con poner `"enabled": false`.
+
+Opcional: `"hand": { "front": [x, y], "back": [x, y] }` indica dónde va el objeto que lleva en la mano
+(centro de su base, en píxeles del frame de 48×88). Solo se aplica cuando se usa el PNG; sin ella, o con
+el arte procedural, el objeto va a la posición de siempre. Tony usa `front [31, 62]` (delante del puño) y
+`back [39, 56]` (junto al brazo doblado).
 Otros personajes usan su nombre de textura (`mehmet.png`, `anna.png`, `sophie.png`…) y una entrada igual en el manifiesto.

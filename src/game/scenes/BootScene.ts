@@ -3,7 +3,7 @@ import { CHARACTERS, FRAME_H, FRAME_W } from '../art/characters';
 import { PAL } from '../art/palette';
 import { glowCanvas, makeCanvas, rect } from '../art/pixel';
 import * as P from '../art/props';
-import { addProceduralSheet, registerCharacterAnims, sheetError, type AssetManifest } from '../art/sprites';
+import { addProceduralSheet, handAnchor, registerCharacterAnims, sheetError, type AssetManifest } from '../art/sprites';
 import { TILE_VARIANTS, tileCanvas, type TileKind } from '../art/tiles';
 import { DRINKS } from '../data/bar';
 import { GameState } from '../state/GameState';
@@ -13,6 +13,8 @@ import { GameState } from '../state/GameState';
  * de forma procedural y registra las animaciones.
  */
 export class BootScene extends Phaser.Scene {
+  private manifest: AssetManifest = {};
+
   constructor() {
     super('Boot');
   }
@@ -23,9 +25,9 @@ export class BootScene extends Phaser.Scene {
   }
 
   create() {
-    const manifest = (this.cache.json.get('asset_manifest') ?? {}) as AssetManifest;
+    this.manifest = (this.cache.json.get('asset_manifest') ?? {}) as AssetManifest;
     let queued = 0;
-    for (const [key, entry] of Object.entries(manifest.characters ?? {})) {
+    for (const [key, entry] of Object.entries(this.manifest.characters ?? {})) {
       if (!entry?.enabled || !CHARACTERS[key]) continue;
       this.load.spritesheet(key, `assets/${entry.file}`, { frameWidth: FRAME_W, frameHeight: FRAME_H });
       queued++;
@@ -47,7 +49,14 @@ export class BootScene extends Phaser.Scene {
         if (err) {
           console.warn(`[sprites] ${key}.png ${err}; se usa el arte procedural.`);
           tex.remove(key);
-        } else console.info(`[sprites] ${key}: usando PNG externo.`);
+        } else {
+          console.info(`[sprites] ${key}: usando PNG externo.`);
+          // la posición de la mano solo vale para el PNG que la define, no para el respaldo procedural
+          const entry = this.manifest.characters?.[key];
+          const hand = entry ? handAnchor(entry) : null;
+          if (hand) this.registry.set(`hand:${key}`, hand);
+          else if (entry?.hand) console.warn(`[sprites] ${key}: posición de mano no válida en el manifiesto; se usa la predeterminada.`);
+        }
       }
       if (!tex.exists(key)) addProceduralSheet(tex, key, style);
       registerCharacterAnims(this.anims, key);

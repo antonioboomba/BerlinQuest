@@ -14,6 +14,30 @@ export interface ManifestEntry {
   file: string;
   /** solo se usa en el juego cuando está aprobado (enabled: true) */
   enabled: boolean;
+  /**
+   * Opcional: dónde va el objeto que lleva en la mano (centro de su base), en píxeles del frame de 48×88,
+   * de frente y de espaldas. Sin él se usa la posición del arte procedural (HAND).
+   */
+  hand?: { front: [number, number]; back: [number, number] };
+}
+
+/** Posición del objeto en la mano en píxeles del frame (x, y), de frente y de espaldas. */
+export interface HandAnchor {
+  front: { x: number; y: number };
+  back: { x: number; y: number };
+}
+
+/** Valida la posición de mano del manifiesto. Devuelve null si falta o no es válida. */
+export function handAnchor(entry: ManifestEntry): HandAnchor | null {
+  const h = entry.hand;
+  if (!h) return null;
+  const pt = (v: unknown) =>
+    Array.isArray(v) && v.length === 2 && v.every((n) => Number.isInteger(n)) && v[0] >= 0 && v[0] < FRAME_W && v[1] >= 0 && v[1] < FRAME_H
+      ? { x: v[0] as number, y: v[1] as number }
+      : null;
+  const front = pt(h.front);
+  const back = pt(h.back);
+  return front && back ? { front, back } : null;
 }
 
 export interface AssetManifest {

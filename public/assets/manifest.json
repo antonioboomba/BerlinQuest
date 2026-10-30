@@ -1,6 +1,6 @@
 {
-  "_comment": "Sprites externos de Berlin Quest. Un personaje solo se usa en el juego cuando su entrada tiene enabled: true. Si el PNG falta o no mide 960x88, el juego usa el arte procedural. La pagina sprite-test.html carga el PNG aunque enabled sea false.",
+  "_comment": "Sprites externos de Berlin Quest. Un personaje solo se usa en el juego cuando su entrada tiene enabled: true. Si el PNG falta o no mide 960x88, el juego usa el arte procedural. La pagina sprite-test.html carga el PNG aunque enabled sea false. hand (opcional): centro de la base del objeto que lleva en la mano, en pixeles del frame de 48x88 [x, y], de frente y de espaldas.",
   "characters": {
-    "player": { "file": "characters/player.png", "enabled": false }
+    "player": { "file": "characters/player.png", "enabled": true, "hand": { "front": [31, 62], "back": [39, 56] } }
   }
 }
