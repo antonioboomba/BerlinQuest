@@ -81,6 +81,9 @@ export class BootScene extends Phaser.Scene {
       }
     }
 
+    // ── Variantes de edificios activadas en el manifiesto ──
+    for (const [key, entry] of Object.entries(this.manifest.buildings ?? {})) this.registry.set(`building:${key}`, !!entry?.enabled);
+
     // ── Suelos ──
     const kinds: TileKind[] = ['cobble', 'slab', 'curb', 'grass', 'water', 'wood', 'tiles', 'carpet', 'asphaltDark', 'lino', 'carpetBlue', 'trackX', 'trackY', 'edgeX', 'edgeY', 'plaza'];
     for (const k of kinds) for (let v = 0; v < TILE_VARIANTS; v++) tex.addCanvas(`tile_${k}_${v}`, tileCanvas(k, v));

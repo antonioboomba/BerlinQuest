@@ -1,7 +1,7 @@
 import { HALF_H, HALF_W } from '../iso';
 import { pixelText, textWidth } from './font';
 import { PAL } from './palette';
-import { fillEllipse, makeCanvas, mix, poly, px, rect, rng, shade, shearFace, type Ctx } from './pixel';
+import { fillEllipse, line, makeCanvas, mix, poly, px, rect, ring, rng, shade, shearFace, type Ctx } from './pixel';
 
 // ───────────── Caja isométrica genérica ─────────────
 // Ancla = esquina trasera (x0, y0) a nivel del suelo. Cara izquierda = plano y = y1 (baja a la derecha),
@@ -85,7 +85,7 @@ function edge(ctx: Ctx, x0: number, y0: number, x1: number, y1: number, c: strin
 
 // ───────────── Fachadas ─────────────
 
-export type BuildingKind = 'apartment' | 'buergeramt' | 'bar' | 'club' | 'office';
+export type BuildingKind = 'apartment' | 'buergeramt' | 'bar' | 'club' | 'office' | 'spaeti';
 
 export interface BuildingSpec {
   kind: BuildingKind;
@@ -109,8 +109,15 @@ export function buildingHeight(floors: number) {
   return GROUND_H + floors * FLOOR_H + ATTIC_H;
 }
 
+/** Planta baja más alta en el edificio del Späti: puertas de ~80 px para un Tony de ~75 px. */
+export const SPAETI_GROUND_H = 120;
+
+function heightOf(spec: BuildingSpec) {
+  return (spec.kind === 'spaeti' ? SPAETI_GROUND_H : GROUND_H) + spec.floors * FLOOR_H + ATTIC_H;
+}
+
 function wallColor(spec: BuildingSpec) {
-  return spec.kind === 'club' ? '#4a4258' : spec.kind === 'buergeramt' ? '#e2d6c0' : spec.color;
+  return spec.kind === 'club' ? '#4a4258' : spec.kind === 'buergeramt' ? '#e2d6c0' : spec.kind === 'spaeti' ? '#e6d8bf' : spec.color;
 }
 
 /** Ventana Altbau: marco blanco, parteluz en cruz, alféizar y dintel. */
@@ -371,7 +378,7 @@ function mainFacade(spec: BuildingSpec): FaceTex {
 function sideFacade(spec: BuildingSpec): FaceTex {
   const r = rng(spec.seed + 99);
   const W = spec.wy * BAY;
-  const H = buildingHeight(spec.floors);
+  const H = heightOf(spec);
   const { canvas, ctx } = makeCanvas(W, H);
   const wall = shade(wallColor(spec), 0.78);
   rect(ctx, 0, 0, W, H, wall);
@@ -389,6 +396,10 @@ function sideFacade(spec: BuildingSpec): FaceTex {
     }
   }
   rect(ctx, 0, H - 6, W, 6, shade(wall, 0.75));
+  if (spec.kind === 'spaeti') {
+    ivy(ctx, 0, ATTIC_H, 7, H - ATTIC_H - 10, r);
+    ivy(ctx, W - 9, ATTIC_H + 20, 9, H - ATTIC_H - 30, r);
+  }
   return { canvas, lights };
 }
 
@@ -429,5 +440,248 @@ function edgeLine(ctx: Ctx, x0: number, y0: number, x1: number, y1: number, c: s
 }
 
 export function buildingArt(spec: BuildingSpec): BoxArt {
+  if (spec.kind === 'spaeti') return isoBox(spec.wx, spec.wy, heightOf(spec), spaetiFacade(spec), sideFacade(spec), spaetiRoof(spec));
   return isoBox(spec.wx, spec.wy, buildingHeight(spec.floors), mainFacade(spec), sideFacade(spec), roof(spec));
+}
+
+// ───────────── Edificio del Späti (casa de Tony) ─────────────
+// Vivienda berlinesa de 2 plantas sobre un Späti turco de neones. Planta baja (de oeste a este):
+// vanos 0–2 = Späti (neveras, puerta de cristal en el vano 1, escaparate), vano 3 = portal de la vivienda,
+// vanos 4–5 = carta de neón, buzones y cajero.
+
+/** Hiedra trepadora en una franja vertical. */
+function ivy(ctx: Ctx, x: number, y: number, w: number, h: number, r: () => number) {
+  for (let yy = y; yy < y + h; yy += 3) {
+    if (r() < 0.25) continue;
+    const cx = x + Math.floor(r() * w);
+    fillEllipse(ctx, cx, yy, 2 + Math.floor(r() * 2), 2, r() < 0.5 ? PAL.leafDark : PAL.leaf);
+    if (r() < 0.4) px(ctx, cx + 1, yy - 1, PAL.leafLight);
+  }
+}
+
+/** Jardinera con flores bajo una ventana. */
+function flowerBox(ctx: Ctx, x: number, y: number, w: number, r: () => number) {
+  for (let i = 0; i < w; i += 3) {
+    fillEllipse(ctx, x + i + 1, y - 2, 2, 2, r() < 0.5 ? PAL.leaf : PAL.leafDark);
+    if (r() < 0.6) px(ctx, x + i + 1, y - 3, r() < 0.5 ? '#ff4f6a' : '#ff9ad0');
+  }
+  rect(ctx, x - 1, y, w + 2, 4, '#9a5a32');
+  rect(ctx, x - 1, y + 3, w + 2, 1, '#6a3a20');
+}
+
+function spaetiFacade(spec: BuildingSpec): FaceTex {
+  const r = rng(spec.seed);
+  const W = spec.wx * BAY;
+  const H = heightOf(spec);
+  const { canvas, ctx } = makeCanvas(W, H);
+  const lights: Light[] = [];
+  const wall = wallColor(spec);
+  rect(ctx, 0, 0, W, H, wall);
+  for (let y = 0; y < H; y += 8) rect(ctx, 0, y, W, 1, shade(wall, 0.97));
+  // manchas y desgaste del revoco
+  for (let i = 0; i < 40; i++) {
+    const x = Math.floor(r() * W);
+    const y = ATTIC_H + Math.floor(r() * (H - ATTIC_H - SPAETI_GROUND_H));
+    rect(ctx, x, y, 1 + Math.floor(r() * 4), 1 + Math.floor(r() * 3), shade(wall, 0.9 + r() * 0.05));
+  }
+
+  // cornisa con dentículos
+  rect(ctx, 0, 0, W, ATTIC_H, shade(wall, 0.9));
+  rect(ctx, 0, ATTIC_H - 6, W, 4, shade(wall, 1.12));
+  rect(ctx, 0, ATTIC_H - 2, W, 2, shade(wall, 0.7));
+  for (let x = 2; x < W; x += 8) rect(ctx, x, ATTIC_H - 10, 4, 4, shade(wall, 1.1));
+
+  // plantas de viviendas: ventanas grandes, algunas iluminadas, jardineras
+  for (let f = 0; f < spec.floors; f++) {
+    const top = ATTIC_H + f * FLOOR_H;
+    rect(ctx, 0, top + FLOOR_H - 3, W, 3, shade(wall, 1.1));
+    rect(ctx, 0, top + FLOOR_H, W, 1, shade(wall, 0.78));
+    for (let b = 0; b < spec.wx; b++) {
+      const l = windowAt(ctx, b * BAY + 8, top + 8, 16, 28, r() < 0.6, r, wall);
+      if (l) lights.push(l);
+      if (r() < 0.55) flowerBox(ctx, b * BAY + 6, top + 44, 20, r);
+    }
+  }
+  // grafitis de las plantas altas: firma lila, corazón y oso de Berlín
+  const gy = ATTIC_H + FLOOR_H + 30;
+  pixelText(ctx, 'KIEZ', 37, gy + 1, PAL.ink, 2);
+  pixelText(ctx, 'KIEZ', 36, gy, '#b07ae8', 2);
+  for (const [x, y] of [[0, 1], [1, 0], [2, 1], [3, 0], [4, 1], [1, 2], [3, 2], [2, 3]]) px(ctx, 156 + x, ATTIC_H + 37 + y, '#d23a4a');
+  const bx = 132;
+  const by = ATTIC_H + FLOOR_H + 26;
+  rect(ctx, bx + 2, by, 5, 4, '#1c1726'); // oso
+  rect(ctx, bx, by + 4, 8, 7, '#1c1726');
+  rect(ctx, bx + 6, by + 2, 3, 2, '#1c1726');
+  rect(ctx, bx + 1, by + 11, 2, 3, '#1c1726');
+  rect(ctx, bx + 5, by + 11, 2, 3, '#1c1726');
+  rect(ctx, bx + 2, by - 2, 4, 1, '#f0c95a'); // corona
+
+  // ── planta baja ──
+  const gTop = H - SPAETI_GROUND_H;
+  rect(ctx, 0, gTop, W, 4, shade(wall, 1.15));
+  rect(ctx, 0, gTop + 4, W, 2, shade(wall, 0.72));
+  rect(ctx, 0, gTop + 6, 96, SPAETI_GROUND_H - 6, '#3a3346'); // frente del comercio
+  rect(ctx, 0, H - 6, W, 6, shade(wall, 0.68)); // zócalo
+  const shopTop = gTop + 48;
+
+  // rótulo luminoso: SPÄTI en neón rojo, líneas rosa y verde, media luna
+  rect(ctx, 2, gTop + 8, 92, 26, '#16121c');
+  rect(ctx, 2, gTop + 8, 92, 1, '#4a4258');
+  rect(ctx, 6, gTop + 11, 84, 1, PAL.neonPink);
+  rect(ctx, 6, gTop + 30, 84, 1, '#5fe39a');
+  lights.push({ ...neonText(ctx, 'SPÄTI', 14, gTop + 14, PAL.neonRed, 3), r: 40, alpha: 0.28 }); // halo suave: el rótulo se lee
+  ring(ctx, 80, gTop + 21, 6, 6, PAL.neonRed, 1);
+  fillEllipse(ctx, 83, gTop + 20, 5, 5, '#16121c');
+  px(ctx, 85, gTop + 20, PAL.neonRed);
+  px(ctx, 86, gTop + 21, PAL.neonRed);
+  px(ctx, 85, gTop + 22, PAL.neonRed);
+  for (let i = 0; i < 6; i++) px(ctx, 6 + i, gTop + 26 - Math.abs(3 - i) * 2, PAL.neonRed); // Fernsehturm en neón
+  lights.push({ x: 48, y: gTop + 9, color: PAL.neonPink, r: 30, alpha: 0.16 }, { x: 48, y: gTop + 32, color: '#5fe39a', r: 30, alpha: 0.16 });
+
+  // toldo de rayas rojas y blancas con festón
+  for (let x = 0; x < 96; x++) {
+    const c = Math.floor(x / 6) % 2 ? '#c8283c' : '#f2ece4';
+    rect(ctx, x, gTop + 36, 1, 10, c);
+    if (x % 6 > 0 && x % 6 < 5) rect(ctx, x, gTop + 46, 1, 2, c);
+  }
+  rect(ctx, 0, gTop + 35, 96, 2, '#7a1020');
+
+  // vano 0: dos neveras iluminadas llenas de bebidas
+  for (const fx of [3, 18]) {
+    rect(ctx, fx, shopTop, 14, H - 6 - shopTop, '#cfd8e8');
+    rect(ctx, fx + 1, shopTop + 1, 12, H - 8 - shopTop, '#e8f6ff');
+    for (let y = shopTop + 3; y < H - 20; y += 7) {
+      for (let x = fx + 2; x < fx + 12; x += 3) rect(ctx, x, y, 2, 5, ['#3fa04a', '#c0392b', '#f0c95a', '#5fc2ff', '#ff9a4a'][Math.floor(r() * 5)]);
+      rect(ctx, fx + 1, y + 5, 12, 1, '#9fb4cc');
+    }
+    rect(ctx, fx + 12, shopTop + 20, 1, 8, '#7a8296');
+  }
+  lights.push({ x: 18, y: shopTop + 24, color: '#bfe8ff', r: 36, alpha: 0.3 });
+
+  // vano 1: puerta de cristal del Späti (iluminada por dentro)
+  const dx = 38;
+  const dTop = H - 82;
+  rect(ctx, dx - 2, dTop, 24, 82, '#2a2430');
+  rect(ctx, dx, dTop + 2, 20, 80, '#ffe6a8');
+  for (let y = dTop + 10; y < H - 10; y += 9) {
+    rect(ctx, dx + 2, y, 16, 1, '#c9a070');
+    for (let x = dx + 3; x < dx + 17; x += 3) rect(ctx, x, y - 4, 2, 4, ['#e8333a', '#5fc2ff', '#ffd77a', '#5fe39a'][Math.floor(r() * 4)]);
+  }
+  rect(ctx, dx - 3, dTop - 1, 26, 3, '#1c1726'); // marco marcado: se distingue de los escaparates
+  rect(ctx, dx - 3, dTop, 3, 82, '#1c1726');
+  rect(ctx, dx + 20, dTop, 3, 82, '#1c1726');
+  rect(ctx, dx, H - 14, 20, 8, '#4a4258'); // zócalo de la puerta
+  rect(ctx, dx + 3, dTop + 6, 14, 7, '#16121c'); // cartel OFFEN
+  pixelText(ctx, 'OFFEN', dx + 4, dTop + 7, '#5fe39a', 1);
+  rect(ctx, dx + 15, dTop + 40, 2, 8, '#f0c95a'); // tirador
+  rect(ctx, dx - 4, H - 3, 28, 3, '#5a4a3a'); // felpudo
+  lights.push({ x: dx + 10, y: H - 36, color: PAL.lampGlow, r: 44, alpha: 0.5 });
+
+  // vano 2: escaparate con estanterías, carteles y pegatinas
+  rect(ctx, 62, shopTop, 32, H - 6 - shopTop, '#2a2430');
+  rect(ctx, 64, shopTop + 2, 28, H - 10 - shopTop, '#ffd9a0');
+  for (let y = shopTop + 8; y < H - 12; y += 8) {
+    rect(ctx, 64, y, 28, 1, '#a8804a');
+    for (let x = 65; x < 91; x += 3) if (r() < 0.85) rect(ctx, x, y - 4, 2, 4, ['#c0392b', '#3fa04a', '#f0c95a', '#7a4ab8', '#ff9a4a', '#5fc2ff'][Math.floor(r() * 6)]);
+  }
+  rect(ctx, 67, shopTop + 6, 9, 11, '#f2ece4'); // cartel de Döner
+  rect(ctx, 70, shopTop + 8, 3, 7, '#c8742a');
+  rect(ctx, 69, shopTop + 8, 5, 1, '#e0a050');
+  rect(ctx, 80, shopTop + 5, 8, 8, '#1c1726'); // pegatina con corazón
+  px(ctx, 83, shopTop + 8, '#e8333a');
+  px(ctx, 85, shopTop + 8, '#e8333a');
+  rect(ctx, 83, shopTop + 9, 3, 1, '#e8333a');
+  px(ctx, 84, shopTop + 10, '#e8333a');
+  lights.push({ x: 78, y: shopTop + 30, color: PAL.windowLitHot, r: 44, alpha: 0.45 });
+  // pilares con pegatinas
+  for (const x of [34, 59, 94]) for (let i = 0; i < 4; i++) rect(ctx, x + Math.floor(r() * 2), shopTop + 8 + Math.floor(r() * 50), 2, 3, ['#ff5fd6', '#5fe39a', '#ffd77a', '#f2ece4'][i]);
+
+  // cajas de fruta y de bebidas delante del comercio (pegadas a la fachada)
+  const crate = (x: number, y: number, w: number, c: string, fill: string[]) => {
+    rect(ctx, x, y, w, 9, c);
+    rect(ctx, x, y, w, 1, shade(c, 1.3));
+    rect(ctx, x + 1, y + 4, w - 2, 1, shade(c, 0.7));
+    for (let i = x + 1; i < x + w - 1; i += 2) rect(ctx, i, y - 2, 2, 2, fill[Math.floor(r() * fill.length)]);
+  };
+  crate(2, H - 25, 12, '#2b6cb0', ['#c9e6f0', '#3fa04a']);
+  crate(2, H - 15, 12, '#c0392b', ['#c9e6f0', '#f0c95a']);
+  crate(15, H - 15, 12, '#c0392b', ['#e8f6ff', '#c0392b']);
+  crate(63, H - 15, 14, '#3a7a3a', ['#ff9a4a', '#ff8a2a', '#f0c95a']);
+  crate(78, H - 15, 14, '#8a5a32', ['#f0e060', '#d8c040', '#3fa04a']);
+  fillEllipse(ctx, 70, H - 4, 4, 3, '#3a8a3a'); // sandía
+  rect(ctx, 68, H - 5, 4, 1, '#5fbf5f');
+
+  // vano 3: portal de la vivienda (casa de Tony): madera, montante, número, timbres y farolillo
+  const hx = 3 * BAY + 6;
+  const hTop = H - 84;
+  rect(ctx, hx - 4, hTop - 4, 28, 88, shade(wall, 0.78));
+  rect(ctx, hx, hTop, 20, 12, PAL.windowLit);
+  rect(ctx, hx + 9, hTop, 2, 12, PAL.frame);
+  rect(ctx, hx, hTop + 14, 20, 70, PAL.woodDark);
+  for (const [px0, py0] of [[2, 17], [11, 17], [2, 50], [11, 50]]) {
+    rect(ctx, hx + px0, hTop + py0, 7, 30, PAL.wood);
+    rect(ctx, hx + px0, hTop + py0, 7, 1, PAL.woodLight);
+  }
+  rect(ctx, hx + 15, hTop + 46, 2, 4, PAL.lamp); // pomo
+  rect(ctx, hx + 3, hTop - 13, 14, 8, '#22356b'); // número de portal
+  pixelText(ctx, '36', hx + 4, hTop - 12, '#ffffff', 1);
+  rect(ctx, hx + 23, hTop + 34, 5, 12, '#b08a3a'); // placa de timbres
+  for (let i = 0; i < 4; i++) px(ctx, hx + 25, hTop + 36 + i * 3, '#f2ece4');
+  rect(ctx, hx + 23, hTop + 4, 5, 5, PAL.lamp); // farolillo
+  rect(ctx, hx + 24, hTop + 9, 3, 1, PAL.iron);
+  lights.push({ x: hx + 25, y: hTop + 6, color: PAL.lampGlow, r: 30, alpha: 0.5 });
+
+  // vanos 4–5: carta de neón, Döner, buzones y cajero
+  rect(ctx, 132, gTop + 8, 56, 40, '#16121c');
+  rect(ctx, 132, gTop + 8, 56, 1, '#4a4258');
+  const menu: [string, string][] = [['GETRÄNKE', '#ff5fd6'], ['SNACKS', '#5fc2ff'], ['TABAK', '#ffb84a'], ['SÜSSWAREN', '#c46bff'], ['OBST GEMÜSE', '#5fe39a']];
+  menu.forEach(([t, c], i) => pixelText(ctx, t, 136, gTop + 11 + i * 7, c, 1));
+  lights.push({ x: 160, y: gTop + 28, color: '#ff5fd6', r: 36, alpha: 0.18 });
+  rect(ctx, 136, gTop + 54, 6, 14, '#c8742a'); // Döner en neón
+  rect(ctx, 135, gTop + 54, 8, 2, '#ffb84a');
+  rect(ctx, 138, gTop + 52, 2, 18, '#ffd77a');
+  rect(ctx, 148, gTop + 58, 6, 7, '#ff4f6a'); // vaso de té
+  rect(ctx, 146, gTop + 66, 10, 1, '#5fc2ff');
+  lights.push({ x: 145, y: gTop + 60, color: '#ff9a4a', r: 30, alpha: 0.4 });
+  rect(ctx, 134, H - 52, 22, 20, '#7a8296'); // buzones
+  for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) rect(ctx, 136 + i * 7, H - 49 + j * 9, 5, 2, '#2a2430');
+  rect(ctx, 168, H - 62, 20, 56, '#8a8f9a'); // cajero
+  rect(ctx, 168, H - 62, 20, 2, '#b8bcc6');
+  rect(ctx, 171, H - 54, 14, 10, '#5fc2ff');
+  rect(ctx, 172, H - 53, 12, 3, '#bfe8ff');
+  for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) rect(ctx, 172 + i * 4, H - 40 + j * 4, 3, 2, '#3a3346');
+  lights.push({ x: 178, y: H - 50, color: '#5fc2ff', r: 22, alpha: 0.45 });
+  graffiti(ctx, 156, H - 40, 12, 28, r, ['36']);
+
+  // hiedra en las esquinas
+  ivy(ctx, 0, ATTIC_H, 6, H - ATTIC_H - SPAETI_GROUND_H + 4, r);
+  ivy(ctx, W - 7, ATTIC_H + 10, 7, H - ATTIC_H - 20, r);
+  return { canvas, lights };
+}
+
+/** Tejado plano con parabólica, aire acondicionado, chimenea y ventilaciones. */
+function spaetiRoof(spec: BuildingSpec) {
+  const base = roof(spec);
+  return (ctx: Ctx, pts: [number, number][]) => {
+    base(ctx, pts);
+    const [d, c, b] = pts;
+    // aire acondicionado
+    const ax = Math.round((d[0] + b[0]) / 2) + 26;
+    const ay = Math.round((d[1] + b[1]) / 2) - 2;
+    rect(ctx, ax, ay - 10, 18, 12, '#d8dce6');
+    rect(ctx, ax, ay - 10, 18, 2, '#f2f4f8');
+    ring(ctx, ax + 6, ay - 4, 3, 3, '#7a8296', 1);
+    rect(ctx, ax + 12, ay - 7, 4, 6, '#a8aeba');
+    // parabólica
+    const sx = d[0] + 30;
+    const sy = d[1] + 18;
+    fillEllipse(ctx, sx, sy - 10, 7, 8, '#e6e9f0');
+    ring(ctx, sx, sy - 10, 7, 8, '#9aa4b8', 1);
+    line(ctx, sx, sy - 10, sx + 4, sy, '#5a5266');
+    // tubos de ventilación
+    for (const [vx, vy] of [[Math.round((c[0] + b[0]) / 2) - 20, Math.round((c[1] + b[1]) / 2) - 4], [ax - 18, ay + 8]]) {
+      rect(ctx, vx, vy - 8, 4, 8, '#6a6a7a');
+      rect(ctx, vx - 1, vy - 9, 6, 2, '#8a8a9a');
+    }
+  };
 }

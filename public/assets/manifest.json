@@ -1,5 +1,5 @@
 {
-  "_comment": "Sprites externos de Berlin Quest. Un personaje solo se usa en el juego cuando su entrada tiene enabled: true. Si el PNG falta o no mide 960x88, el juego usa el arte procedural. La pagina sprite-test.html carga el PNG aunque enabled sea false. hand (opcional): centro de la base del objeto que lleva en la mano, en pixeles del frame de 48x88 [x, y], de frente y de espaldas. props: objetos de la ciudad en pixel art a escala 1 (max 160x160); anchor = punto del PNG que se apoya en el suelo, shadow = sombra del juego bajo el objeto. Desactivados o invalidos, se usa el objeto procedural.",
+  "_comment": "Sprites externos de Berlin Quest. Un personaje solo se usa en el juego cuando su entrada tiene enabled: true. Si el PNG falta o no mide 960x88, el juego usa el arte procedural. La pagina sprite-test.html carga el PNG aunque enabled sea false. hand (opcional): centro de la base del objeto que lleva en la mano, en pixeles del frame de 48x88 [x, y], de frente y de espaldas. props: objetos de la ciudad en pixel art a escala 1 (max 160x160); anchor = punto del PNG que se apoya en el suelo, shadow = sombra del juego bajo el objeto. Desactivados o invalidos, se usa el objeto procedural. buildings: variantes de edificios del motor (spaeti_house = casa de Tony con el Spaeti de neones); enabled false = edificio anterior.",
   "characters": {
     "player": { "file": "characters/player.png", "enabled": true, "hand": { "front": [31, 62], "back": [39, 56] } }
   },
@@ -8,5 +8,8 @@
     "bike_turquoise": { "file": "props/bike_turquoise.png", "enabled": true, "anchor": [24, 48], "shadow": { "w": 42, "h": 10, "angle": -21 } },
     "bike_green_cargo": { "file": "props/bike_green_cargo.png", "enabled": true, "anchor": [29, 44], "shadow": { "w": 48, "h": 10, "angle": -14 } },
     "bike_red_locked": { "file": "props/bike_red_locked.png", "enabled": true, "anchor": [24, 43], "shadow": { "w": 42, "h": 10, "angle": -20 } }
+  },
+  "buildings": {
+    "spaeti_house": { "enabled": false }
   }
 }

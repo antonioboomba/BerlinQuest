@@ -90,7 +90,9 @@ export class StreetScene extends WorldScene {
   // ───────────── Construcción ─────────────
 
   private buildBuildings() {
-    for (const b of BUILDINGS) {
+    for (const placed of BUILDINGS) {
+      // casa de Tony: edificio del Späti de neones si está activado en el manifiesto; si no, el de antes
+      const b: PlacedBuilding = placed === BUILDINGS[0] && this.registry.get('building:spaeti_house') ? { ...placed, kind: 'spaeti' } : placed;
       const art = buildingArt(b);
       const key = `bld_${b.kind}_${b.x0}`;
       if (!this.textures.exists(key)) this.textures.addCanvas(key, art.canvas);
@@ -102,7 +104,7 @@ export class StreetScene extends WorldScene {
       this.collision.add(b.x0, b.y0, b.x0 + b.wx, b.y0 + b.wy + 0.2);
       this.minimap.push({
         rect: { x0: b.x0, y0: b.y0, x1: b.x0 + b.wx, y1: b.y0 + b.wy },
-        color: b.kind === 'bar' ? 0xc8283c : b.kind === 'club' ? 0x7a4ab8 : b.kind === 'buergeramt' ? 0xc9b98f : 0xd9958a,
+        color: b.kind === 'bar' ? 0xc8283c : b.kind === 'club' ? 0x7a4ab8 : b.kind === 'buergeramt' ? 0xc9b98f : b.kind === 'spaeti' ? 0xe6d8bf : 0xd9958a,
       });
     }
     // luz del bar y del club sobre la acera
