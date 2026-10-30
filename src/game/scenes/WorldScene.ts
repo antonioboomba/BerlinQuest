@@ -112,6 +112,11 @@ export abstract class WorldScene extends Phaser.Scene {
     this.cameras.main.setZoom(zoomFor(w, h) * getDPR());
   }
 
+  /** ¿Hay niebla en la escena? (la interfaz vela un poco los diálogos para fundirlos con ella) */
+  get foggy() {
+    return this.fog.length > 0;
+  }
+
   /** Activa el modo noche: llamar antes de añadir luces (addGlow) y cerrar con buildNight(). */
   protected enableNight(color: number, alpha: number) {
     this.nightOn = true;

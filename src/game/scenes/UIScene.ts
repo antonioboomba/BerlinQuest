@@ -83,6 +83,8 @@ export class UIScene extends Phaser.Scene {
   private prompt!: Phaser.GameObjects.Container;
   private promptText!: Phaser.GameObjects.Text;
   private bubbles = new Map<number, BubbleView>();
+  /** la escena activa tiene niebla: diálogos ligeramente velados */
+  private fogDialogs = false;
   private toasts: Phaser.GameObjects.Container[] = [];
 
   private dialog: Phaser.GameObjects.Container | null = null;
@@ -472,6 +474,12 @@ export class UIScene extends Phaser.Scene {
   private drawBubbles(world: WorldScene, toUi: (x: number, y: number) => { x: number; y: number }) {
     const seen = new Set<number>();
     const tr = GameState.data.settings.translations;
+    // con niebla, los bocadillos se velan un poco (relleno gris azulado, borde y texto algo atenuados)
+    const fog = world.foggy;
+    if (fog !== this.fogDialogs) {
+      this.fogDialogs = fog;
+      if (this.dialog) this.renderDialog();
+    }
     for (const b of world.getBubbles()) {
       seen.add(b.id);
       let v = this.bubbles.get(b.id);
@@ -507,12 +515,16 @@ export class UIScene extends Phaser.Scene {
       const border = b.bubble.tone === 'angry' ? 0xe8333a : b.bubble.tone === 'order' ? 0xff9a2a : b.bubble.tone === 'happy' ? 0x2fbf6a : 0x2a2238;
       const g = v.box;
       g.clear();
-      g.fillStyle(0x000000, 0.25).fillRoundedRect(bx + 3, by + 4, w, h, 12);
-      g.fillStyle(0xffffff, 1).fillRoundedRect(bx, by, w, h, 12);
+      const fill = fog ? 0xe6eaf2 : 0xffffff;
+      const fa = fog ? 0.9 : 1;
+      if (fog) g.fillStyle(0xa3abc0, 0.14).fillRoundedRect(bx - 6, by - 6, w + 12, h + 12, 16); // halo de niebla
+      g.fillStyle(0x000000, fog ? 0.18 : 0.25).fillRoundedRect(bx + 3, by + 4, w, h, 12);
+      g.fillStyle(fill, fa).fillRoundedRect(bx, by, w, h, 12);
       g.fillTriangle(s.x - 9, by + h - 1, s.x + 9, by + h - 1, s.x, by + h + 12);
-      g.lineStyle(3, border, 1).strokeRoundedRect(bx, by, w, h, 12);
-      g.lineStyle(3, border, 1).lineBetween(s.x - 9, by + h + 1, s.x, by + h + 12).lineBetween(s.x + 9, by + h + 1, s.x, by + h + 12);
-      g.fillStyle(0xeef2fa, 1).fillRoundedRect(bx + 8, by + 8, 32, 32, 8);
+      g.lineStyle(3, border, fog ? 0.8 : 1).strokeRoundedRect(bx, by, w, h, 12);
+      g.lineStyle(3, border, fog ? 0.8 : 1).lineBetween(s.x - 9, by + h + 1, s.x, by + h + 12).lineBetween(s.x + 9, by + h + 1, s.x, by + h + 12);
+      g.fillStyle(fog ? 0xdfe4ee : 0xeef2fa, fa).fillRoundedRect(bx + 8, by + 8, 32, 32, 8);
+      for (const o of [v.name, v.de, v.es, v.head]) o.setAlpha(fog ? 0.92 : 1);
       v.head.setPosition(bx + 11, by + 10);
       v.name.setPosition(bx + 48, by + 5);
       v.de.setPosition(bx + 48, by + 5 + v.name.displayHeight - 2);
@@ -621,7 +633,7 @@ export class UIScene extends Phaser.Scene {
     const H = this.H;
     const w = Math.min(1000, W - 40);
     const x = Math.round((W - w) / 2);
-    const box = this.add.container(0, 0).setDepth(20);
+    const box = this.add.container(0, 0).setDepth(20).setAlpha(this.fogDialogs ? 0.93 : 1); // con niebla, algo velado
     const g = this.add.graphics();
     box.add(g);
     const tx = x + 176;
