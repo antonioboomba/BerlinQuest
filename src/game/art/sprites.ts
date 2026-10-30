@@ -40,8 +40,39 @@ export function handAnchor(entry: ManifestEntry): HandAnchor | null {
   return front && back ? { front, back } : null;
 }
 
+/** Objeto de la ciudad dibujado a mano (public/assets/props/...), a escala 1 como los personajes. */
+export interface PropEntry {
+  file: string;
+  enabled: boolean;
+  /** punto del PNG que se apoya en la posición del mundo (píxeles), p. ej. el centro entre las ruedas */
+  anchor: [number, number];
+  /** sombra del juego bajo el objeto, centrada en el anclaje (px; ángulo en grados) */
+  shadow?: { w: number; h: number; angle?: number };
+}
+
+/** Datos ya validados de un objeto externo cargado (se guardan en el registro como `prop:<clave>`). */
+export interface PropInfo {
+  anchor: { x: number; y: number };
+  shadow: { w: number; h: number; angle: number } | null;
+}
+
 export interface AssetManifest {
   characters?: Record<string, ManifestEntry>;
+  props?: Record<string, PropEntry>;
+}
+
+/** Tamaño máximo de un objeto externo (evita cargar ilustraciones a alta resolución por error). */
+export const PROP_MAX = 160;
+
+/** Valida un objeto externo ya cargado. Devuelve el error o los datos para colocarlo. */
+export function propInfo(tex: Phaser.Textures.Texture, entry: PropEntry): string | PropInfo {
+  const src = tex.getSourceImage() as { width: number; height: number };
+  if (src.width > PROP_MAX || src.height > PROP_MAX) return `mide ${src.width}×${src.height} px; máximo ${PROP_MAX}×${PROP_MAX} (pixel art a escala 1)`;
+  const [ax, ay] = entry.anchor ?? [];
+  if (!Number.isInteger(ax) || !Number.isInteger(ay) || ax < 0 || ay < 0 || ax > src.width || ay > src.height) return 'anclaje no válido';
+  const s = entry.shadow;
+  const shadow = s && s.w > 0 && s.h > 0 ? { w: s.w, h: s.h, angle: s.angle ?? 0 } : null;
+  return { anchor: { x: ax, y: ay }, shadow };
 }
 
 /** Comprueba que una textura cargada tiene el formato de hoja esperado. Devuelve el error o null. */

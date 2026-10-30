@@ -177,7 +177,8 @@ export class StreetScene extends WorldScene {
     this.placeProp('tree2', 22.4, 11.5, { block: 0.6 });
     // acera norte
     this.placeProp('bike_red', 1.6, 4.75, { block: [0.9, 0.4] });
-    this.placeProp('bike_blue', 2.5, 4.75, { block: [0.9, 0.4] });
+    // bici de prueba del Bike Pack 01 (PNG externo); sin él, la procedural azul de siempre
+    this.placeProp(this.propKey('bike_black', 'bike_blue'), 2.5, 4.75, { block: [0.9, 0.4] });
     this.placeProp('bin', 5.6, 4.6, { block: 0.4 });
     this.placeProp('planter0', 6.6, 4.55, { block: 0.5 });
     this.placeProp('planter1', 9.4, 4.55, { block: 0.5 });

@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import type { Light } from '../art/buildings';
+import type { PropInfo } from '../art/sprites';
 import { depthOf, HALF_H, HALF_W, screenDirToWorld, TILE_H, TILE_W, toScreen, zoomFor, type Facing } from '../iso';
 import { GameState } from '../state/GameState';
 import { Actor } from '../world/Actor';
@@ -121,10 +122,28 @@ export abstract class WorldScene extends Phaser.Scene {
   }
 
   /** Coloca un objeto con su punto de apoyo en (x, y) del mundo y sus luces. */
+  /** Clave del objeto externo si está cargado y es válido; si no, la del arte procedural de respaldo. */
+  propKey(external: string, fallback: string) {
+    return this.registry.get(`prop:${external}`) ? external : fallback;
+  }
+
   placeProp(key: string, x: number, y: number, opts: { block?: number | [number, number]; flip?: boolean; glow?: boolean } = {}) {
     const s = toScreen(x, y);
     const img = this.add.image(Math.round(s.x), Math.round(s.y), key).setOrigin(0.5, 1).setDepth(depthOf(x, y));
     if (opts.flip) img.setFlipX(true);
+    // objeto externo (manifiesto): se apoya en su anclaje y lleva la sombra del juego debajo
+    const ext = this.registry.get(`prop:${key}`) as PropInfo | undefined;
+    if (ext) {
+      const ax = opts.flip ? img.width - ext.anchor.x : ext.anchor.x;
+      img.setOrigin(ax / img.width, ext.anchor.y / img.height);
+      if (ext.shadow)
+        this.add
+          .image(Math.round(s.x), Math.round(s.y), 'shadow')
+          .setDisplaySize(ext.shadow.w, ext.shadow.h)
+          .setAngle(opts.flip ? -ext.shadow.angle : ext.shadow.angle)
+          .setAlpha(0.35)
+          .setDepth(depthOf(x, y) - 0.01);
+    }
     if (opts.block !== undefined) {
       const [w, h] = Array.isArray(opts.block) ? opts.block : [opts.block, opts.block];
       this.collision.addAt(x, y, w, h);

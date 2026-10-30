@@ -3,7 +3,7 @@ import { CHARACTERS, FRAME_H, FRAME_W } from '../art/characters';
 import { PAL } from '../art/palette';
 import { glowCanvas, makeCanvas, rect } from '../art/pixel';
 import * as P from '../art/props';
-import { addProceduralSheet, handAnchor, registerCharacterAnims, sheetError, type AssetManifest } from '../art/sprites';
+import { addProceduralSheet, handAnchor, propInfo, registerCharacterAnims, sheetError, type AssetManifest } from '../art/sprites';
 import { TILE_VARIANTS, tileCanvas, type TileKind } from '../art/tiles';
 import { DRINKS } from '../data/bar';
 import { GameState } from '../state/GameState';
@@ -30,6 +30,12 @@ export class BootScene extends Phaser.Scene {
     for (const [key, entry] of Object.entries(this.manifest.characters ?? {})) {
       if (!entry?.enabled || !CHARACTERS[key]) continue;
       this.load.spritesheet(key, `assets/${entry.file}`, { frameWidth: FRAME_W, frameHeight: FRAME_H });
+      queued++;
+    }
+    // objetos de la ciudad dibujados a mano (bicis…): se cargan con su nombre del manifiesto
+    for (const [key, entry] of Object.entries(this.manifest.props ?? {})) {
+      if (!entry?.enabled) continue;
+      this.load.image(key, `assets/${entry.file}`);
       queued++;
     }
     this.load.on('loaderror', (file: Phaser.Loader.File) => console.warn(`[sprites] No se pudo cargar ${file.src}; se usa el arte procedural.`));
@@ -62,12 +68,26 @@ export class BootScene extends Phaser.Scene {
       registerCharacterAnims(this.anims, key);
     }
 
+    // ── Objetos externos: válidos → se registran; si no, se descartan y se usa el arte procedural ──
+    for (const [key, entry] of Object.entries(this.manifest.props ?? {})) {
+      if (!entry?.enabled || !tex.exists(key)) continue;
+      const info = propInfo(tex.get(key), entry);
+      if (typeof info === 'string') {
+        console.warn(`[sprites] ${entry.file} ${info}; se usa el arte procedural.`);
+        tex.remove(key);
+      } else {
+        this.registry.set(`prop:${key}`, info);
+        console.info(`[sprites] ${key}: usando PNG externo.`);
+      }
+    }
+
     // ── Suelos ──
     const kinds: TileKind[] = ['cobble', 'slab', 'curb', 'grass', 'water', 'wood', 'tiles', 'carpet', 'asphaltDark', 'lino', 'carpetBlue', 'trackX', 'trackY', 'edgeX', 'edgeY', 'plaza'];
     for (const k of kinds) for (let v = 0; v < TILE_VARIANTS; v++) tex.addCanvas(`tile_${k}_${v}`, tileCanvas(k, v));
 
     // ── Objetos ──
     const add = (key: string, art: P.PropArt) => {
+      if (tex.exists(key)) return; // ya lo sustituye un PNG externo válido
       tex.addCanvas(key, art.canvas);
       this.registry.set(`lights:${key}`, art.lights ?? []);
     };
