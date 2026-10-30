@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Berlin Quest · Sprite test</title>
+    <style>
+      html, body { margin: 0; background: #141a2e; color: #e8edf7; font: 14px/1.4 "Segoe UI", system-ui, sans-serif; }
+      #bar { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 10px 14px; background: #111a2e; border-bottom: 2px solid #4a74c9; }
+      #bar b { color: #ffd77a; }
+      #bar button { background: #18233c; color: #fff; border: 1px solid #2c4270; border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+      #bar button.on { background: #24407a; border-color: #5fa8ff; }
+      #bar label { display: inline-flex; gap: 4px; align-items: center; cursor: pointer; }
+      #status { padding: 6px 14px; font-weight: 600; }
+      #status.ok { color: #6dffa8; }
+      #status.warn { color: #ffd77a; }
+      #status.err { color: #ff8a96; }
+      #drop { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: #05070dcc; font-size: 28px; color: #ffd77a; z-index: 10; }
+      #game canvas { display: block; image-rendering: pixelated; }
+      #help { padding: 4px 14px 10px; color: #b8c4de; font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    <div id="bar">
+      <b>Sprite test</b>
+      <span>Animación:</span>
+      <span id="anims"></span>
+      <label><input type="checkbox" id="markers" checked /> Marcadores</label>
+      <label><input type="checkbox" id="held" /> Objeto en la mano</label>
+      <label>Archivo: <input type="file" id="file" accept="image/png" /></label>
+      <button id="reload">Recargar player.png</button>
+    </div>
+    <div id="status">Cargando…</div>
+    <div id="help">
+      Marcadores: <span style="color:#ff5a6a">✚ pies (x 24, y 86)</span> · <span style="color:#5fa8ff">● mano (43, 46)</span> ·
+      <span style="color:#6dffa8">▭ zona del retrato (6, 0, 36×36)</span> · <span style="color:#ffd77a">— altura del bocadillo</span>.
+      Paseo (derecha): WASD o flechas. También puedes arrastrar un PNG a la página.
+    </div>
+    <div id="game"></div>
+    <div id="drop">Suelta el PNG aquí</div>
+    <script type="module" src="/src/sprite-test/main.ts"></script>
+  </body>
+</html>

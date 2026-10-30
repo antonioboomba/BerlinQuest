@@ -11,6 +11,8 @@ export default defineConfig({
         // Juego Phaser (principal) y versión clásica React (Bürgeramt por diálogos).
         main: resolve(__dirname, 'index.html'),
         classic: resolve(__dirname, 'classic.html'),
+        // entorno de pruebas de sprites (no forma parte del juego)
+        spriteTest: resolve(__dirname, 'sprite-test.html'),
       },
     },
     chunkSizeWarningLimit: 2000,

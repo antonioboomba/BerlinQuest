@@ -54,6 +54,18 @@ src/game/
   con «ß», umlauts y «€» inequívocos. Tamaños múltiplos de 4 (16/20/24/28 px).
   No se usa `letterSpacing` de Phaser: dibuja letra a letra y rompe emojis y glifos.
 
+### Sprites externos (PNG profesionales)
+
+- **Dónde va el protagonista:** `public/assets/characters/player.png` (formato y medidas en
+  `public/assets/characters/README.md`: PNG transparente de 960×88, 20 frames de 48×88).
+- **Probarlo sin tocar el juego:** `npm run dev` y abrir http://localhost:5173/sprite-test.html
+  (20 frames con marcadores de pies, mano, retrato y bocadillo; 4 direcciones; paseo con WASD;
+  también admite arrastrar un PNG).
+- **Activarlo en el juego:** en `public/assets/manifest.json` poner `"enabled": true` en `player`.
+  Mientras sea `false`, el juego sigue usando el arte procedural.
+- **Respaldo automático:** si el PNG falta o no mide 960×88, `BootScene` avisa en la consola y genera el
+  arte procedural. Código: `src/game/art/sprites.ts` y `src/game/scenes/BootScene.ts`.
+
 ### Sustituir el arte procedural por spritesheets dibujados
 
 Todas las texturas se registran en `BootScene` con claves estables (`player`, `mehmet`, `lamp`, `tree0`,

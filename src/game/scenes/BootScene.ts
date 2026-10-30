@@ -1,42 +1,56 @@
 import Phaser from 'phaser';
-import { CHARACTERS, drawCharacterSheet, FRAME_H, FRAME_W, FRAMES } from '../art/characters';
+import { CHARACTERS, FRAME_H, FRAME_W } from '../art/characters';
 import { PAL } from '../art/palette';
 import { glowCanvas, makeCanvas, rect } from '../art/pixel';
 import * as P from '../art/props';
+import { addProceduralSheet, registerCharacterAnims, sheetError, type AssetManifest } from '../art/sprites';
 import { TILE_VARIANTS, tileCanvas, type TileKind } from '../art/tiles';
 import { DRINKS } from '../data/bar';
 import { GameState } from '../state/GameState';
 
-/** Genera todas las texturas procedurales y registra las animaciones. */
+/**
+ * Carga los sprites externos aprobados (public/assets/manifest.json), genera el resto de texturas
+ * de forma procedural y registra las animaciones.
+ */
 export class BootScene extends Phaser.Scene {
   constructor() {
     super('Boot');
   }
 
+  preload() {
+    // si el manifiesto falta, el juego sigue con el arte procedural
+    this.load.json('asset_manifest', 'assets/manifest.json');
+  }
+
   create() {
+    const manifest = (this.cache.json.get('asset_manifest') ?? {}) as AssetManifest;
+    let queued = 0;
+    for (const [key, entry] of Object.entries(manifest.characters ?? {})) {
+      if (!entry?.enabled || !CHARACTERS[key]) continue;
+      this.load.spritesheet(key, `assets/${entry.file}`, { frameWidth: FRAME_W, frameHeight: FRAME_H });
+      queued++;
+    }
+    this.load.on('loaderror', (file: Phaser.Loader.File) => console.warn(`[sprites] No se pudo cargar ${file.src}; se usa el arte procedural.`));
+    if (!queued) return this.build();
+    this.load.once('complete', () => this.build());
+    this.load.start();
+  }
+
+  private build() {
     GameState.load();
     const tex = this.textures;
 
-    // ── Personajes: hoja de 20 frames + animaciones ──
+    // ── Personajes: PNG externo aprobado y válido, o arte procedural de respaldo ──
     for (const [key, style] of Object.entries(CHARACTERS)) {
-      const canvas = drawCharacterSheet(style);
-      const t = tex.addCanvas(key, canvas)!;
-      const n = canvas.width / FRAME_W;
-      for (let i = 0; i < n; i++) t.add(i, 0, i * FRAME_W, 0, FRAME_W, FRAME_H);
-      for (const [side, off] of [['front', 0], ['back', 10]] as const) {
-        const mk = (name: string, frames: readonly number[], rate: number) =>
-          this.anims.create({
-            key: `${key}:${side}:${name}`,
-            frames: frames.map((f) => ({ key, frame: f + off })),
-            frameRate: rate,
-            repeat: -1,
-          });
-        mk('idle', FRAMES.idle, 2);
-        mk('walk', FRAMES.walk, 8);
-        mk('carryIdle', FRAMES.carryIdle, 1);
-        mk('carryWalk', FRAMES.carryWalk, 8);
-        mk('sit', FRAMES.sit, 1);
+      if (tex.exists(key)) {
+        const err = sheetError(tex.get(key));
+        if (err) {
+          console.warn(`[sprites] ${key}.png ${err}; se usa el arte procedural.`);
+          tex.remove(key);
+        } else console.info(`[sprites] ${key}: usando PNG externo.`);
       }
+      if (!tex.exists(key)) addProceduralSheet(tex, key, style);
+      registerCharacterAnims(this.anims, key);
     }
 
     // ── Suelos ──
