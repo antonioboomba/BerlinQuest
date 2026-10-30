@@ -10,6 +10,8 @@ import { WorldScene } from './WorldScene';
 // Manzana compacta de Kreuzberg: una fila de edificios, calle adoquinada, plaza con U-Bahn y canal.
 const MAP_W = 24;
 const MAP_H = 15;
+/** Luz de sodio de las farolas. */
+const LAMP_ORANGE = '#ff7418';
 
 interface PlacedBuilding extends BuildingSpec {
   x0: number;
@@ -42,6 +44,8 @@ export class StreetScene extends WorldScene {
     this.initWorld({ x0: 0.25, y0: 4.25, x1: MAP_W - 0.25, y1: 12.7 });
     this.brains = [];
     this.cameras.main.setBackgroundColor(PAL.night);
+    // noche oscura y misteriosa: solo se ve bien lo que alumbran farolas, ventanas y neones
+    this.enableNight(0x04050c, 0.74);
 
     const ref = this.registry.get('ground:sidewalk_ref') as { x0: number; cols: number; south: boolean } | undefined;
     const cobbles = this.registry.get('ground:cobble_ref') as number | undefined;
@@ -85,6 +89,7 @@ export class StreetScene extends WorldScene {
     const tl = toScreen(0, MAP_H);
     const br = toScreen(MAP_W, 0);
     this.cameras.main.setBounds(tl.x - 64, -260, br.x - tl.x + 128, toScreen(MAP_W, MAP_H).y + 300);
+    this.buildNight();
 
     this.objectivePoi = () => {
       const q = GameState.data.quest;
@@ -213,12 +218,12 @@ export class StreetScene extends WorldScene {
     for (const x of [21]) {
       this.placeProp(lamp, x, 5.75, { block: 0.3 });
       const s = toScreen(x, 5.75);
-      this.addGlow(s.x, s.y, PAL.lampGlow, 110, 0.28, -90000);
+      this.addGlow(s.x, s.y, LAMP_ORANGE, 130, 0.42, -90000);
     }
     for (const x of [7, 19]) {
       this.placeProp(lamp, x, 9.25, { block: 0.3 });
       const s = toScreen(x, 9.25);
-      this.addGlow(s.x, s.y, PAL.lampGlow, 110, 0.28, -90000);
+      this.addGlow(s.x, s.y, LAMP_ORANGE, 130, 0.42, -90000);
     }
     // acera norte
     // bicis del Bike Pack 01 (PNG externos); sin ellos, las procedurales de siempre

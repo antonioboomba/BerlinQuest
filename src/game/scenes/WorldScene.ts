@@ -9,6 +9,9 @@ import { getDPR, logicalSize } from '../display';
 import { touchInput } from '../ui/touch';
 import type { UIScene } from './UIScene';
 
+/** Profundidad de la capa de oscuridad del modo noche (por encima de todo el mundo, debajo de las luces). */
+const NIGHT_DEPTH = 500000;
+
 export interface Interactable {
   x: number;
   y: number;
@@ -43,6 +46,12 @@ export abstract class WorldScene extends Phaser.Scene {
   private currentTarget: Interactable | null = null;
   private transitioning = false;
   private flicker: { img: Phaser.GameObjects.Image; base: number }[] = [];
+  // ── modo noche (opcional por escena) ──
+  private nightOn = false;
+  private nightLights: { x: number; y: number; r: number; a: number }[] = [];
+  private nightRT: Phaser.GameObjects.RenderTexture | null = null;
+  private nightBrush: Phaser.GameObjects.Image | null = null;
+  private nightCfg = { color: 0x05060f, alpha: 0.7 };
   private marker: Phaser.GameObjects.Image | null = null;
   private standPos: Pt | null = null;
 
@@ -58,6 +67,9 @@ export abstract class WorldScene extends Phaser.Scene {
     this.minimap = [];
     this.pois = [];
     this.flicker = [];
+    this.nightOn = false;
+    this.nightLights = [];
+    this.nightRT = null;
     this.transitioning = false;
     this.marker = null;
     this.standPos = null;
@@ -98,6 +110,40 @@ export abstract class WorldScene extends Phaser.Scene {
     this.cameras.main.setZoom(zoomFor(w, h) * getDPR());
   }
 
+  /** Activa el modo noche: llamar antes de añadir luces (addGlow) y cerrar con buildNight(). */
+  protected enableNight(color: number, alpha: number) {
+    this.nightOn = true;
+    this.nightLights = [];
+    this.nightCfg = { color, alpha };
+  }
+
+  /**
+   * Capa de oscuridad sobre el mundo con huecos suaves donde hay luz (y uno pequeño alrededor del jugador).
+   * Una sola RenderTexture del tamaño de los límites de la cámara; las luces van por encima.
+   */
+  protected buildNight() {
+    if (!this.nightOn) return;
+    const b = this.cameras.main.getBounds();
+    this.nightRT = this.add.renderTexture(b.x, b.y, b.width, b.height).setOrigin(0, 0).setDepth(NIGHT_DEPTH);
+    this.nightBrush = this.make.image({ key: 'glow_white', add: false });
+    this.drawNight();
+  }
+
+  private drawNight() {
+    const rt = this.nightRT;
+    const brush = this.nightBrush;
+    if (!rt || !brush) return;
+    rt.clear();
+    rt.fill(this.nightCfg.color, this.nightCfg.alpha);
+    const hole = (x: number, y: number, r: number, a: number) => {
+      brush.setScale(r / 64).setAlpha(Math.min(1, a));
+      rt.erase(brush, x - rt.x, y - rt.y);
+    };
+    for (const l of this.nightLights) hole(l.x, l.y, l.r * 1.35, l.a * 2.4);
+    const p = this.player?.sprite;
+    if (p) hole(p.x, p.y - 36, 70, 0.55); // el jugador siempre se distingue
+  }
+
   /** Posición inicial válida: si la guardada cae fuera del mapa o dentro de algo, usa la de reserva. */
   protected safeStart(p: Pt | null, fallback: Pt): Pt {
     return p && !this.collision.blocked(p.x, p.y, 0.24) ? p : fallback;
@@ -110,13 +156,15 @@ export abstract class WorldScene extends Phaser.Scene {
 
   /** Halo de luz aditivo en coordenadas de pantalla del mundo. */
   addGlow(x: number, y: number, color: string, radius: number, alpha = 0.5, depth = 1e6, flicker = false) {
+    // en modo noche las luces abren un hueco en la oscuridad y se pintan encima (iluminan también a los personajes)
+    if (this.nightOn) this.nightLights.push({ x, y, r: radius, a: alpha });
     const img = this.add
       .image(x, y, 'glow_white')
       .setTint(Phaser.Display.Color.HexStringToColor(color).color)
       .setBlendMode(Phaser.BlendModes.ADD)
       .setAlpha(alpha)
       .setScale(radius / 64)
-      .setDepth(depth);
+      .setDepth(this.nightOn ? NIGHT_DEPTH + 1 : depth);
     if (flicker) this.flicker.push({ img, base: alpha });
     return img;
   }
@@ -245,6 +293,7 @@ export abstract class WorldScene extends Phaser.Scene {
 
     // parpadeo sutil de luces
     for (const f of this.flicker) f.img.setAlpha(f.base * (0.92 + Math.random() * 0.08));
+    if (this.nightRT) this.drawNight();
 
     this.worldUpdate(dt);
 
