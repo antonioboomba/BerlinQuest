@@ -271,8 +271,9 @@ export class StreetScene extends WorldScene {
       ['bike_black_basket', 'bike_blue', 11.6, 10.65],
     ];
     for (const [ext, proc, x, y] of bikes) this.placeProp(this.propKey(ext, proc), x, y, { block: [0.9, 0.4] });
-    this.placeProp('bench', 7.6, 12.2, { block: [1.6, 0.5] });
-    this.placeProp('bench', 18.4, 12.2, { block: [1.6, 0.5] });
+    this.placeProp(this.propKey('bench_berlin', 'bench'), 7.6, 12.2, { block: [1.9, 0.5] });
+    this.placeProp(this.propKey('bench_berlin', 'bench'), 18.4, 12.2, { block: [1.9, 0.5] });
+    this.placeProp(this.propKey('bench_berlin', 'bench'), 21.6, 12.2, { block: [1.9, 0.5] });
     this.placeProp('bin', 9.5, 12.3, { block: 0.4 });
 
     this.minimap.push(

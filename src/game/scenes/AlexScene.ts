@@ -62,7 +62,7 @@ export class AlexScene extends WorldScene {
       const s = toScreen(x, 5.6);
       this.addGlow(s.x, s.y, PAL.lampGlow, 100, 0.25, -90000);
     }
-    this.placeProp('bench', 12.5, 12.6, { block: [1.6, 0.5] });
+    this.placeProp(this.propKey('bench_berlin', 'bench'), 12.5, 12.6, { block: [1.9, 0.5] });
     this.placeProp('litfass', 8, 12.4, { block: 0.8 });
 
     const start = this.safeStart(data?.from === 'Train' || data?.from === 'Street' ? null : data?.x !== undefined ? { x: data.x, y: data.y! } : null, {
