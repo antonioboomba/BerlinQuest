@@ -5,6 +5,7 @@ import { BarScene } from './scenes/BarScene';
 import { BootScene } from './scenes/BootScene';
 import { StreetScene } from './scenes/StreetScene';
 import { UIScene } from './scenes/UIScene';
+import { WGScene } from './scenes/WGScene';
 import { getDPR } from './display';
 import { GameState } from './state/GameState';
 
@@ -26,7 +27,7 @@ async function start() {
     // canvas a píxeles físicos; el zoom 1/DPR lo devuelve a su tamaño CSS sin reescalado borroso
     scale: { mode: Phaser.Scale.NONE, width: Math.round(window.innerWidth * getDPR()), height: Math.round(window.innerHeight * getDPR()), zoom: 1 / getDPR() },
     input: { activePointers: 3 },
-    scene: [BootScene, StreetScene, BarScene, AmtScene, UIScene],
+    scene: [BootScene, StreetScene, BarScene, AmtScene, WGScene, UIScene],
   });
   window.addEventListener('resize', () => {
     const d = getDPR();

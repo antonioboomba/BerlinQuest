@@ -531,3 +531,151 @@ export function marker(): HTMLCanvasElement {
   outline(ctx, 32, 40, PAL.outline);
   return canvas;
 }
+
+// ───────────── WG (piso compartido) ─────────────
+
+export function umzugskarton(label: string): PropArt {
+  const { canvas, ctx } = makeCanvas(40, 40);
+  groundShadow(ctx, 20, 36, 16, 4);
+  for (let row = 0; row < 12; row++) {
+    const t = row < 6 ? row + 1 : 12 - row;
+    rect(ctx, 20 - t * 3, 4 + row, t * 6, 1, '#d9a86a');
+  }
+  rect(ctx, 2, 10, 18, 22, '#c4884a');
+  rect(ctx, 20, 10, 18, 22, '#a86e38');
+  rect(ctx, 2, 10, 18, 2, '#e6b880');
+  rect(ctx, 19, 4, 2, 28, '#e8d6a8'); // cinta
+  pixelText(ctx, label, 4, 18, '#2a2238');
+  return done(canvas, ctx);
+}
+
+/** Objetos que se llevan en la mano (20×24, como las bebidas). */
+export const CARRY_ART: Record<string, (ctx: Ctx) => void> = {
+  lampe: (ctx) => {
+    for (let y = 0; y < 8; y++) rect(ctx, 6 - y / 2, 2 + y, 8 + y, 1, y < 2 ? '#fff0bf' : '#ffd77a');
+    rect(ctx, 9, 10, 2, 9, '#5a5266');
+    rect(ctx, 5, 19, 10, 3, '#3a3346');
+  },
+  buecher: (ctx) => {
+    rect(ctx, 2, 6, 5, 16, '#c94a4a');
+    rect(ctx, 7, 4, 5, 18, '#3b5bdb');
+    rect(ctx, 12, 8, 5, 14, '#3fa04a');
+    for (const x of [3, 8, 13]) rect(ctx, x, 10, 3, 1, '#ffd77a');
+  },
+  kissen: (ctx) => {
+    fillEllipse(ctx, 10, 13, 9, 7, '#e0675a');
+    fillEllipse(ctx, 8, 11, 5, 3, '#f0907a');
+    rect(ctx, 9, 12, 2, 2, '#ffffff');
+  },
+};
+
+export function carryIcon(id: string): HTMLCanvasElement {
+  const { canvas, ctx } = makeCanvas(20, 24);
+  CARRY_ART[id]?.(ctx);
+  outline(ctx, 20, 24, PAL.outline);
+  return canvas;
+}
+
+export function deskLamp(): PropArt {
+  const { canvas, ctx } = makeCanvas(26, 34);
+  rect(ctx, 6, 28, 14, 4, '#3a3346');
+  rect(ctx, 12, 12, 2, 16, '#5a5266');
+  for (let y = 0; y < 10; y++) rect(ctx, 6 - y / 3, 2 + y, 14 + y / 1.5, 1, y < 2 ? '#fff0bf' : '#ffd77a');
+  return done(canvas, ctx, [{ x: 0, y: -20, color: PAL.lampGlow, r: 40 }]);
+}
+
+export function bookRow(): PropArt {
+  const { canvas, ctx } = makeCanvas(30, 20);
+  const cols = ['#c94a4a', '#3b5bdb', '#3fa04a', '#f0c95a', '#7a4ab8', '#e0675a'];
+  cols.forEach((c, i) => rect(ctx, 2 + i * 4, 2 + (i % 3), 4, 16 - (i % 3), c));
+  return done(canvas, ctx);
+}
+
+export function pillow(): PropArt {
+  const { canvas, ctx } = makeCanvas(30, 18);
+  fillEllipse(ctx, 15, 9, 13, 6, '#e0675a');
+  fillEllipse(ctx, 12, 7, 7, 3, '#f0907a');
+  return done(canvas, ctx);
+}
+
+export function toilet(): PropArt {
+  const { canvas, ctx } = makeCanvas(30, 40);
+  groundShadow(ctx, 15, 37, 11, 3);
+  rect(ctx, 6, 2, 18, 14, '#f2f4f8');
+  rect(ctx, 6, 2, 18, 3, '#ffffff');
+  fillEllipse(ctx, 15, 24, 11, 6, '#e6e9f0');
+  fillEllipse(ctx, 15, 23, 8, 4, '#c9d6e8');
+  rect(ctx, 10, 26, 10, 10, '#e6e9f0');
+  return done(canvas, ctx);
+}
+
+export function washbasin(): PropArt {
+  const { canvas, ctx } = makeCanvas(30, 56);
+  rect(ctx, 6, 0, 18, 20, '#bfe3ff'); // espejo
+  rect(ctx, 6, 0, 18, 2, '#ffffff');
+  rect(ctx, 8, 3, 4, 10, '#e6f4ff');
+  fillEllipse(ctx, 15, 28, 12, 5, '#f2f4f8');
+  fillEllipse(ctx, 15, 27, 8, 3, '#c9d6e8');
+  rect(ctx, 14, 22, 2, 4, '#9aa4b8');
+  rect(ctx, 12, 32, 6, 22, '#e6e9f0');
+  return done(canvas, ctx);
+}
+
+export function dishes(): PropArt {
+  const { canvas, ctx } = makeCanvas(32, 26);
+  for (let i = 0; i < 4; i++) fillEllipse(ctx, 14, 20 - i * 3, 11, 4, i % 2 ? '#e6eef8' : '#ffffff');
+  rect(ctx, 22, 6, 4, 12, '#e6eef8');
+  rect(ctx, 3, 4, 5, 13, '#f0c95a');
+  rect(ctx, 12, 10, 3, 2, '#a86e38'); // restos
+  return done(canvas, ctx);
+}
+
+export function stoveTop(): PropArt {
+  const { canvas, ctx } = makeCanvas(40, 22);
+  for (const [x, y] of [[12, 6], [26, 6], [12, 15], [26, 15]]) {
+    fillEllipse(ctx, x, y, 6, 3, '#2a2238');
+    fillEllipse(ctx, x, y, 4, 2, '#4a4258');
+  }
+  rect(ctx, 30, 1, 8, 6, '#c94a4a'); // tetera
+  return { canvas };
+}
+
+export function faucet(): PropArt {
+  const { canvas, ctx } = makeCanvas(24, 26);
+  fillEllipse(ctx, 12, 18, 10, 5, '#9aa4b8');
+  fillEllipse(ctx, 12, 17, 8, 3, '#5a6278');
+  rect(ctx, 16, 2, 3, 13, '#c9cfdc');
+  rect(ctx, 11, 2, 7, 3, '#c9cfdc');
+  return done(canvas, ctx);
+}
+
+export function putzplanSheet(): PropArt {
+  const { canvas, ctx } = makeCanvas(26, 30);
+  rect(ctx, 2, 2, 22, 26, '#ffffff');
+  rect(ctx, 2, 2, 22, 5, '#5fc2c0');
+  for (let r = 0; r < 4; r++) {
+    rect(ctx, 4, 10 + r * 4, 18, 1, '#9aa4b8');
+    rect(ctx, 14, 9 + r * 4, 1, 4, '#9aa4b8');
+  }
+  rect(ctx, 11, 0, 4, 4, '#c8283c'); // imán
+  return done(canvas, ctx);
+}
+
+/** Placa con el nombre de una habitación (letrero en la pared o en un poste). */
+export function roomPlate(text: string): PropArt {
+  const w = textWidth(text, 2) + 14;
+  const { canvas, ctx } = makeCanvas(w + 2, 22);
+  rect(ctx, 1, 1, w, 20, '#ffffff');
+  rect(ctx, 3, 3, w - 4, 16, '#2a2238');
+  pixelText(ctx, text, 8, 6, '#ffd77a', 2);
+  return done(canvas, ctx);
+}
+
+export function floorLamp(): PropArt {
+  const { canvas, ctx } = makeCanvas(30, 96);
+  groundShadow(ctx, 15, 92, 10, 3);
+  fillEllipse(ctx, 15, 92, 9, 3, '#3a3346');
+  rect(ctx, 14, 20, 3, 72, '#5a5266');
+  for (let y = 0; y < 16; y++) rect(ctx, 7 - y / 4, 4 + y, 16 + y / 2, 1, y < 2 ? '#fff6e0' : '#f2dcb8');
+  return done(canvas, ctx, [{ x: 0, y: -80, color: PAL.lampGlow, r: 60 }]);
+}

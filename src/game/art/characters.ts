@@ -312,5 +312,7 @@ export const CHARACTERS: Record<string, CharStyle> = {
   schmidt: { skin: '#f0c4a2', hair: '#d9b26a', hairStyle: 'bun', top: '#3fa08a', accent: '#f2ece4', jacket: true, pants: '#3a3a4a', shoes: '#2b2b36', glasses: true },
   citizen1: { skin: '#8a5a3a', hair: '#1c1410', hairStyle: 'curly', top: '#ff7a2a', sleeves: 'short', pants: '#2f3f6b', shoes: '#f2ece4' },
   citizen2: { skin: '#f2c19e', hair: '#5a3220', hairStyle: 'cap', accent: '#3fa04a', top: '#e0675a', jacket: true, pants: '#4a4a5a', shoes: '#2b2b36', beard: true },
+  sophie: { skin: '#f6caa6', hair: '#e8a33a', hairStyle: 'long', top: '#5fc2c0', accent: '#ffffff', sleeves: 'short', pants: '#3a3a5a', shoes: '#e0675a', glasses: true },
+  emre: { skin: '#c48a62', hair: '#1c1410', hairStyle: 'short', top: '#2f2f3f', accent: '#ffd77a', jacket: true, pants: '#4a5a7a', shoes: '#f2ece4', beard: true },
   bouncer: { skin: '#6a4028', hair: '#151018', hairStyle: 'bald', top: '#24242e', accent: '#3a3a48', jacket: true, pants: '#1c1c24', shoes: '#151018', beard: true, glasses: true },
 };

@@ -4,11 +4,10 @@ import { VOCAB, vocabLabel } from '../../data/vocabulary';
 import { resolveLevelText } from '../../engine/dialogue';
 import { mastery } from '../../engine/srs';
 import { CEFR_LEVELS } from '../../engine/types';
-import { DIALOGS as BAR_DIALOGS, DRINKS, SPEAKERS, type DChoice, type DNode } from '../data/bar';
-
-const DIALOGS = { ...BAR_DIALOGS, ...AMT_DIALOGS };
+import { DRINKS, type DChoice, type DNode } from '../data/bar';
+import { DIALOGS } from '../data/dialogs';
+import { SPEAKERS } from '../data/npcs';
 import { toScreen } from '../iso';
-import { AMT_DIALOGS } from '../data/amt';
 import { QUESTS, type FormField } from '../data/quests';
 import { GameState, speakDe, type QuestCompletion } from '../state/GameState';
 import { touchInput } from '../ui/touch';
@@ -120,9 +119,10 @@ export class UIScene extends Phaser.Scene {
   }
 
   get world(): WorldScene | null {
-    for (const key of ['Bar', 'Amt', 'Street']) {
-      const s = this.scene.get(key) as WorldScene;
-      if (s && this.scene.isActive(key)) return s;
+    // la escena de mundo activa es la que tiene jugador (todas excepto Boot y UI)
+    for (const s of this.scene.manager.getScenes(true)) {
+      const w = s as WorldScene;
+      if (s !== this && w.player && w.collision) return w;
     }
     return null;
   }

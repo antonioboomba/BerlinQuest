@@ -424,7 +424,7 @@ export class BarScene extends WorldScene {
     let dialog = 'boss_free';
     if (q.id === 'shift') dialog = ({ talk_boss: 'boss_intro', serve: 'boss_busy', get_paid: 'boss_pay' } as Record<string, string>)[q.step] ?? 'boss_free';
     else if (q.id === 'anmeldung') dialog = 'boss_reminder';
-    else if (GameState.isDone('anmeldung')) dialog = 'boss_proud';
+    else if (GameState.isDone('anmeldung')) dialog = GameState.isDone('wg') ? 'boss_memory' : 'boss_proud';
     this.mehmet.face(this.player.pos);
     this.ui.openDialog(dialog, this.mehmet, (action) => this.onBossAction(action));
   }

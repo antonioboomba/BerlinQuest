@@ -1,7 +1,7 @@
 // Cadena de misiones del juego Phaser. Cada misión define sus pasos (con el objetivo que ve el
 // jugador) y su recompensa. Al completarse una misión empieza automáticamente la siguiente.
 
-export type QuestId = 'shift' | 'anmeldung';
+export type QuestId = 'shift' | 'anmeldung' | 'wg';
 
 export interface QuestStepDef {
   id: string;
@@ -56,6 +56,22 @@ export const QUESTS: QuestDef[] = [
       { id: 'sign', label: 'Firma y recoge la Anmeldebestätigung', objective: 'Firma en el puesto (pulsa E en la mesa).', icon: '✍️' },
     ],
     reward: { xp: 120, money: 0, items: ['anmeldebestaetigung'] },
+  },
+  {
+    id: 'wg',
+    code: 'Mission 03',
+    title: 'Die WG',
+    outro: 'Ya tienes casa en Berlín: el piso compartido es ahora tu base.',
+    steps: [
+      { id: 'invite', label: 'Habla con Anna: tiene noticias', objective: 'Anna te espera en la calle: habla con ella.', icon: '🏠' },
+      { id: 'enter', label: 'Entra en tu nuevo piso', objective: 'Entra en tu piso: la puerta de madera junto al Späti.', icon: '🚪' },
+      { id: 'meet', label: 'Conoce a Sophie y Emre', objective: 'Conoce a tus compañeros de piso, Sophie y Emre. ({count}/2)', icon: '👋' },
+      { id: 'unpack', label: 'Coloca tus cosas en tu habitación', objective: 'Coge tus cosas de las cajas del pasillo y colócalas donde dijo Sophie. ({count}/3)', icon: '📦' },
+      { id: 'conflict', label: 'Habla con Emre en la cocina', objective: 'Emre parece molesto: habla con él en la cocina.', icon: '😤' },
+      { id: 'wash', label: 'Friega los platos', objective: 'Friega los platos en el fregadero de la cocina.', icon: '🧽' },
+      { id: 'putzplan', label: 'Apúntate en el Putzplan', objective: 'Apúntate en el Putzplan (en la nevera).', icon: '📋' },
+    ],
+    reward: { xp: 100, money: 0 },
   },
 ];
 

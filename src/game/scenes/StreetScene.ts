@@ -59,6 +59,8 @@ export class StreetScene extends WorldScene {
         ? { x: doorPos(bar).x, y: doorPos(bar).y + 0.3 }
         : data?.from === 'Amt'
           ? { x: doorPos(amt).x, y: doorPos(amt).y + 0.3 }
+          : data?.from === 'WG'
+            ? { x: doorPos(BUILDINGS[0]).x, y: doorPos(BUILDINGS[0]).y + 0.3 }
           : data?.x !== undefined
             ? { x: data.x, y: data.y! }
             : null,
@@ -75,6 +77,7 @@ export class StreetScene extends WorldScene {
       const q = GameState.data.quest;
       if (q.id === 'shift') return doorPos(BUILDINGS[2]);
       if (q.id === 'anmeldung') return q.step === 'get_wgb' && this.anna ? this.anna.pos : doorPos(BUILDINGS[1]);
+      if (q.id === 'wg') return q.step === 'invite' && this.anna ? this.anna.pos : doorPos(BUILDINGS[0]);
       return null;
     };
     this.time.addEvent({ delay: 2000, loop: true, callback: () => this.savePosition() });
@@ -110,7 +113,15 @@ export class StreetScene extends WorldScene {
 
     const [home, amt, barB, clubB] = BUILDINGS;
     const hd = doorPos(home);
-    this.interactables.push({ x: hd.x, y: hd.y, radius: 1.1, label: () => 'Llamar al timbre', action: () => this.ui.openDialog('home_door') });
+    // la puerta de casa abre el piso compartido desde la Misión 03
+    const wgOpen = () => (GameState.isActive('wg') && !GameState.isActive('wg', 'invite')) || GameState.isDone('wg');
+    this.interactables.push({
+      x: hd.x,
+      y: hd.y,
+      radius: 1.1,
+      label: () => (wgOpen() ? 'Entrar a casa (WG)' : 'Llamar al timbre'),
+      action: () => (wgOpen() ? this.goTo('WG', { from: 'Street' }) : this.ui.openDialog('home_door')),
+    });
     const sp = { x: 1.5, y: home.wy + 0.5 };
     this.interactables.push({ x: sp.x, y: sp.y, radius: 1.2, label: () => 'Mirar el Späti', action: () => this.ui.openDialog('spaeti') });
     const ad = doorPos(amt);
@@ -312,8 +323,18 @@ export class StreetScene extends WorldScene {
       'Anna',
       2.5,
       5.3,
-      () => (GameState.isActive('anmeldung', 'get_wgb') ? 'anna_wgb' : GameState.isActive('shift', 'go_bar') ? 'anna_new' : 'anna'),
+      () =>
+        GameState.isActive('wg', 'invite')
+          ? 'anna_wg_invite'
+          : GameState.isActive('anmeldung', 'get_wgb')
+            ? 'anna_wgb'
+            : GameState.isDone('wg')
+              ? 'anna_after_wg'
+              : GameState.isActive('shift', 'go_bar')
+                ? 'anna_new'
+                : 'anna',
       (a) => {
+        if (a === 'wg:invited' && GameState.isActive('wg', 'invite')) GameState.setQuest('enter');
         if (a !== 'give_wgb' || !GameState.isActive('anmeldung', 'get_wgb')) return;
         GameState.addItem('wgb');
         GameState.setQuest('go_amt');
@@ -322,7 +343,11 @@ export class StreetScene extends WorldScene {
     );
     this.anna = anna;
     const home = doorPos(BUILDINGS[0]);
-    this.brains.push(
+    // en la invitación de la Misión 03, Anna espera junto a la puerta de casa
+    if (GameState.isActive('wg', 'invite')) {
+      anna.setPos(home.x + 0.9, home.y + 0.5);
+      this.brains.push(new StaticBrain(this, anna, 'SW', ['Hallo! Komm mal her!', '¡Hola! ¡Ven un momento!']));
+    } else this.brains.push(
       new PatrolBrain(this, anna, [
         { x: 8, y: 5.2, wait: 2, say: ['Wieder geschlossen…', 'Otra vez cerrado…'] },
         { ...doorPos(BUILDINGS[2]), hide: 12 },

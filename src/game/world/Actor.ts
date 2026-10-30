@@ -70,7 +70,8 @@ export class Actor {
     this.held?.destroy();
     this.held = null;
     this.heldId = drinkId;
-    if (drinkId) this.held = this.scene.add.image(0, 0, `drink_${drinkId}`).setOrigin(0.5, 1);
+    // bebidas (drink_*) u objetos de la mudanza/compra (carry_*)
+    if (drinkId) this.held = this.scene.add.image(0, 0, this.scene.textures.exists(`drink_${drinkId}`) ? `drink_${drinkId}` : `carry_${drinkId}`).setOrigin(0.5, 1);
     this.play();
   }
 

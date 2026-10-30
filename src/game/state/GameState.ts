@@ -24,6 +24,8 @@ export interface QuestState {
   desk?: number;
   /** documentos ya entregados en el puesto (Misión 02) */
   docs?: number;
+  /** contador genérico del paso actual (personas conocidas, objetos colocados…) */
+  count?: number;
 }
 
 export interface SaveData {
@@ -94,6 +96,11 @@ class GameStateImpl extends Phaser.Events.EventEmitter {
           const base = fresh();
           this.data = { ...base, ...d, settings: { ...base.settings, ...d.settings }, stats: { ...base.stats, ...d.stats } };
           migrateQuest(this.data);
+          // al añadir misiones nuevas, una partida «terminada» continúa por la primera pendiente
+          if (this.data.quest.id === 'none') {
+            const next = QUESTS.find((q) => !this.data.completed.includes(q.id));
+            if (next) this.data.quest = { id: next.id, step: next.steps[0].id, served: 0 };
+          }
         }
       }
     } catch {
@@ -193,10 +200,24 @@ class GameStateImpl extends Phaser.Events.EventEmitter {
     return this.data.completed.includes(id);
   }
 
+  /** Memoria del mundo: hechos que los NPC recuerdan. */
+  flag(k: string): boolean {
+    return !!this.data.flags[k];
+  }
+
   setQuest(step: string) {
     this.data.quest.step = step;
+    this.data.quest.count = 0;
     this.emit('quest', step);
     this.changed();
+  }
+
+  /** Suma 1 al contador del paso actual y devuelve el nuevo valor. */
+  bump(): number {
+    this.data.quest.count = (this.data.quest.count ?? 0) + 1;
+    this.emit('quest', this.data.quest.step);
+    this.changed();
+    return this.data.quest.count;
   }
 
   /** Cierra la misión activa: recompensa, la marca como completada y arranca la siguiente. */
@@ -242,7 +263,10 @@ class GameStateImpl extends Phaser.Events.EventEmitter {
     const def = this.questDef;
     const step = def?.steps.find((s) => s.id === q.step);
     if (!def || !step) return { icon: '🏆', text: '¡Has completado todo el contenido disponible! Pronto habrá nuevas misiones.' };
-    return { icon: step.icon, text: step.objective.replace('{served}', String(q.served)).replace('{desk}', String(q.desk ?? '?')) };
+    return {
+      icon: step.icon,
+      text: step.objective.replace('{served}', String(q.served)).replace('{desk}', String(q.desk ?? '?')).replace('{count}', String(q.count ?? 0)),
+    };
   }
 }
 

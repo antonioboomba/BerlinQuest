@@ -68,6 +68,22 @@ export class BootScene extends Phaser.Scene {
     add('cooler', P.waterCooler());
     add('monitor', P.monitor());
     tex.addCanvas('marker', P.marker());
+    // Misión 03: piso compartido
+    add('karton_lampe', P.umzugskarton('LAMPE'));
+    add('karton_buecher', P.umzugskarton('BÜCHER'));
+    add('karton_kissen', P.umzugskarton('KISSEN'));
+    for (const id of Object.keys(P.CARRY_ART)) tex.addCanvas(`carry_${id}`, P.carryIcon(id));
+    add('placed_lampe', P.deskLamp());
+    add('placed_buecher', P.bookRow());
+    add('placed_kissen', P.pillow());
+    add('toilet', P.toilet());
+    add('washbasin', P.washbasin());
+    add('dishes', P.dishes());
+    add('stove_top', P.stoveTop());
+    add('faucet', P.faucet());
+    add('putzplan', P.putzplanSheet());
+    add('plate_zimmer', P.roomPlate('DEIN ZIMMER'));
+    add('floor_lamp', P.floorLamp());
     add('street_sign', P.streetSign('KREUZBERG'));
     add('railing', P.railingX());
     add('terrace_table', P.terraceTable());
@@ -94,6 +110,7 @@ export class BootScene extends Phaser.Scene {
 
     const loc = GameState.data.location;
     this.scene.launch('UI');
-    this.scene.start(loc?.scene === 'Bar' || loc?.scene === 'Amt' ? loc.scene : 'Street', loc ? { x: loc.x, y: loc.y } : undefined);
+    const known = loc && loc.scene !== 'Boot' && loc.scene !== 'UI' && this.scene.manager.keys[loc.scene];
+    this.scene.start(known ? loc!.scene : 'Street', loc ? { x: loc.x, y: loc.y } : undefined);
   }
 }
