@@ -22,8 +22,8 @@
 node ref_atlas.cjs acera_referencia.png sidewalk_ref.png 24 7 sur
 ```
 
-Atlas de 24 × 5 baldosas de 64×32 (1536×160): filas y = 4, y = 5 (losas y bordillo) y cara del bordillo en y = 6
-(acera norte); y = 9 (bordillo hacia la calzada) e y = 10 (acera sur, con su propia secuencia de piezas).
+Atlas de 24 × 7 baldosas de 64×32 (1536×224): filas y = 4, y = 5 (losas y bordillo) y cara del bordillo en y = 6
+(acera norte); y = 9 (bordillo hacia la calzada) e y = 10 (acera sur, con su propia secuencia de piezas); y = 11 e y = 12 (losas de la plaza, sin bordillo).
 
 ## En el juego
 

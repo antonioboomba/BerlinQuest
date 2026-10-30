@@ -103,11 +103,11 @@ export class StreetScene extends WorldScene {
   /**
    * Acera reproducida de la referencia: baldosas del atlas sobre la acera norte (y = 4 losas, y = 5 losas y
    * bordillo), la cara vertical del bordillo sobre la calzada (y = 6) y, si el atlas la trae, la acera sur
-   * (y = 9 con el bordillo hacia la calzada, y = 10), desde la columna x0.
+   * (y = 9 con el bordillo hacia la calzada, y = 10) y las losas de la plaza (y = 11–12), desde la columna x0.
    */
   private paintSidewalkRef(ctx: CanvasRenderingContext2D, ox: number, oy: number, ref: { x0: number; cols: number; south: boolean }) {
     const atlas = this.textures.get('sidewalk_ref').getSourceImage() as HTMLImageElement;
-    const rows = ref.south ? [[0, 4], [1, 5], [2, 6], [3, 9], [4, 10]] : [[0, 4], [1, 5], [2, 6]];
+    const rows = ref.south ? [[0, 4], [1, 5], [2, 6], [3, 9], [4, 10], [5, 11], [6, 12]] : [[0, 4], [1, 5], [2, 6]];
     for (let c = 0; c < ref.cols; c++)
       for (const [row, y] of rows) {
         const s = toScreen(ref.x0 + c, y);
@@ -222,10 +222,6 @@ export class StreetScene extends WorldScene {
       const s = toScreen(x, 9.25);
       this.addGlow(s.x, s.y, PAL.lampGlow, 110, 0.28, -90000);
     }
-    // árboles en los parterres
-    this.placeProp('tree0', 1.4, 11.5, { block: 0.6 });
-    this.placeProp('tree1', 10.6, 11.4, { block: 0.6 });
-    this.placeProp('tree2', 22.4, 11.5, { block: 0.6 });
     // acera norte
     // bicis del Bike Pack 01 (PNG externos); sin ellos, las procedurales de siempre
     this.placeProp(this.propKey('bike_turquoise', 'bike_red'), 1.6, 4.75, { block: [0.9, 0.4] });
@@ -456,7 +452,6 @@ function groundKind(x: number, y: number): string | null {
   if (y <= 4) return 'slab';
   if (y === 5) return 'curb';
   if (y >= 6 && y <= 8) return 'cobble';
-  if (y === 9 || y === 10 || y === 12) return 'slab';
-  if (y === 11) return (x >= 2 && x <= 5) || (x >= 12 && x <= 17) ? 'slab' : 'grass';
+  if (y >= 9 && y <= 12) return 'slab'; // aceras y plaza (sin parterres de césped)
   return 'water';
 }

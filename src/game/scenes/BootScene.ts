@@ -102,10 +102,10 @@ export class BootScene extends Phaser.Scene {
     // solo si el atlas cargó y tiene filas completas de 64×32; si no, se queda el suelo de antes
     if (ref?.enabled && tex.exists('sidewalk_ref')) {
       const img = tex.get('sidewalk_ref').getSourceImage() as { width: number; height: number };
-      // 3 filas = acera norte (y 4, y 5, cara del bordillo en y 6); 5 filas = además la acera sur (y 9, y 10)
-      if (img.width % 64 === 0 && (img.height === 96 || img.height === 160))
-        this.registry.set('ground:sidewalk_ref', { x0: ref.x0 ?? 0, cols: img.width / 64, south: img.height === 160 });
-      else console.warn(`[sprites] ${ref.file} mide ${img.width}×${img.height}; se esperaba N×64 × 96 o 160. Se usa la acera de antes.`);
+      // 3 filas = acera norte (y 4, y 5, cara del bordillo en y 6); 7 filas = además la acera sur y la plaza (y 9–12)
+      if (img.width % 64 === 0 && (img.height === 96 || img.height === 224))
+        this.registry.set('ground:sidewalk_ref', { x0: ref.x0 ?? 0, cols: img.width / 64, south: img.height === 224 });
+      else console.warn(`[sprites] ${ref.file} mide ${img.width}×${img.height}; se esperaba N×64 × 96 o 224. Se usa la acera de antes.`);
     }
     // adoquines de la calzada: N baldosas de 64×32 en fila; si no, los adoquines procedurales de antes
     const cob = this.manifest.ground?.cobble_ref;

@@ -59,6 +59,7 @@ function strip() {
 }
 const NORTH = strip();
 const SOUTH = strip();
+const PLAZA = strip(); // losas de la plaza sur (y = 11, y = 12)
 const at = (seq, X) => { let i = 0; while (i + 1 < seq.length && seq[i + 1].x <= X) i++; return i; };
 
 /** Punto de la referencia para la posición X (casillas) y el ancho t de la acera. */
@@ -116,6 +117,16 @@ for (let col = 0; col < COLS; col++) {
         if (c) raw.push({ x: col * TW + px, y: row * TH + py, c });
       }
     }
+  if (WITH_SOUTH)
+    // plaza (y = 11, y = 12): solo las dos hileras de losas de la referencia, sin bordillo
+    for (const [row, y] of [[5, 11], [6, 12]]) {
+      for (let py = 0; py < TH; py++) for (let px = 0; px < TW; px++) {
+        const [u, v] = tileUV(px + 0.5, py + 0.5);
+        if (u < 0 || u >= 1 || v < 0 || v >= 1) continue;
+        const c = avg((fx, fy) => { const [uu, vv] = tileUV(fx, fy); return refPoint(col + uu, ((y + vv - 11) / 2) * CURB_SPLIT, PLAZA); }, px, py);
+        if (c) raw.push({ x: col * TW + px, y: row * TH + py, c });
+      }
+    }
   for (let py = 0; py < TH; py++) for (let px = 0; px < TW; px++) {
     const [u, v] = tileUV(px + 0.5, py + 0.5);
     if (u < 0 || u >= 1 || v < 0 || v >= 1) continue;
@@ -138,7 +149,7 @@ for (let it = 0; it < 12; it++) {
   for (const p of raw) { const k = near(p.c); acc[k][0] += p.c[0]; acc[k][1] += p.c[1]; acc[k][2] += p.c[2]; acc[k][3]++; }
   cent = cent.map((q, k) => (acc[k][3] ? [acc[k][0] / acc[k][3], acc[k][1] / acc[k][3], acc[k][2] / acc[k][3]] : q));
 }
-const atlas = P.blank(COLS * TW, (WITH_SOUTH ? 5 : 3) * TH);
+const atlas = P.blank(COLS * TW, (WITH_SOUTH ? 7 : 3) * TH);
 for (const p of raw) P.set(atlas, p.x, p.y, [...cent[near(p.c)].map(Math.round), 255]);
 P.write(outF, atlas);
 console.log(JSON.stringify({
