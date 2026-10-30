@@ -62,6 +62,8 @@ export interface AssetManifest {
   characters?: Record<string, ManifestEntry>;
   props?: Record<string, PropEntry>;
   /** suelo: aceras berlinesas v1 («off» = aceras de antes, «test» = tramo frente al Späti, «all») */
+  /** fachadas frontales dibujadas aparte (p. ej. bar): textura de 32 px por casilla de largo, puerta y luces en px */
+  facades?: Record<string, { file: string; enabled: boolean; door?: number; lights?: { x: number; y: number; color: string; r: number; alpha?: number }[] }>;
   ground?: {
     /** acera reproducida de la referencia: atlas de 3 filas (y = 4, y = 5, cara del bordillo en y = 6) desde la columna x0 */
     sidewalk_ref?: { file: string; enabled: boolean; x0: number };

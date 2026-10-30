@@ -44,6 +44,11 @@ export class BootScene extends Phaser.Scene {
       this.load.image('sidewalk_ref', `assets/${ref.file}`);
       queued++;
     }
+    for (const [key, f] of Object.entries(this.manifest.facades ?? {}))
+      if (f?.enabled) {
+        this.load.image(`facade_${key}`, `assets/${f.file}`);
+        queued++;
+      }
     const cob = this.manifest.ground?.cobble_ref;
     if (cob?.enabled) {
       this.load.image('cobble_ref', `assets/${cob.file}`);
@@ -107,6 +112,9 @@ export class BootScene extends Phaser.Scene {
         this.registry.set('ground:sidewalk_ref', { x0: ref.x0 ?? 0, cols: img.width / 64, south: img.height === 224 });
       else console.warn(`[sprites] ${ref.file} mide ${img.width}×${img.height}; se esperaba N×64 × 96 o 224. Se usa la acera de antes.`);
     }
+    // fachadas externas: se registran si cargaron; si no, el edificio usa su fachada procedural
+    for (const [key, f] of Object.entries(this.manifest.facades ?? {}))
+      if (f?.enabled && tex.exists(`facade_${key}`)) this.registry.set(`facade:${key}`, { door: f.door, lights: f.lights ?? [] });
     // adoquines de la calzada: N baldosas de 64×32 en fila; si no, los adoquines procedurales de antes
     const cob = this.manifest.ground?.cobble_ref;
     if (cob?.enabled && tex.exists('cobble_ref')) {

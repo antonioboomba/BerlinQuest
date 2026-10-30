@@ -431,3 +431,25 @@ function edgeLine(ctx: Ctx, x0: number, y0: number, x1: number, y1: number, c: s
 export function buildingArt(spec: BuildingSpec): BoxArt {
   return isoBox(spec.wx, spec.wy, buildingHeight(spec.floors), mainFacade(spec), sideFacade(spec), roof(spec));
 }
+
+/**
+ * Edificio con la fachada frontal dibujada aparte (imagen externa del ancho de la fachada). El lateral se pinta
+ * liso con el color medio de la propia fachada y el tejado es el procedural.
+ */
+export function facadeArt(spec: BuildingSpec, face: CanvasImageSource & { width: number; height: number }, lights: Light[]): BoxArt {
+  const H = face.height;
+  const front = makeCanvas(spec.wx * BAY, H);
+  front.ctx.imageSmoothingEnabled = false;
+  front.ctx.drawImage(face, 0, 0, spec.wx * BAY, H);
+  // color del muro: media de la franja superior de la fachada
+  const d = front.ctx.getImageData(0, ATTIC_H, spec.wx * BAY, 8).data;
+  let r = 0, g = 0, b = 0;
+  for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; }
+  const n = d.length / 4;
+  const wall = shade(`#${[r, g, b].map((c) => Math.round(c / n).toString(16).padStart(2, '0')).join('')}`, 0.72);
+  const side = makeCanvas(spec.wy * BAY, H);
+  rect(side.ctx, 0, 0, spec.wy * BAY, H, wall);
+  rect(side.ctx, 0, ATTIC_H - 6, spec.wy * BAY, 4, shade(wall, 1.12));
+  rect(side.ctx, 0, H - 6, spec.wy * BAY, 6, shade(wall, 0.75));
+  return isoBox(spec.wx, spec.wy, H, { canvas: front.canvas, lights }, { canvas: side.canvas }, roof(spec));
+}

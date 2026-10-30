@@ -1,4 +1,4 @@
-import { buildingArt, type BuildingSpec } from '../art/buildings';
+import { buildingArt, facadeArt, type BuildingSpec, type Light } from '../art/buildings';
 import { FACADES, PAL } from '../art/palette';
 import { makeCanvas, poly, px, rect, shade } from '../art/pixel';
 import { depthOf, HALF_H, HALF_W, TILE_H, TILE_W, toScreen } from '../iso';
@@ -27,8 +27,11 @@ const BUILDINGS: PlacedBuilding[] = [
   { kind: 'club', x0: 18, y0: 0, wx: 6, wy: 4, floors: 2, color: '#4a4258', seed: 67, doorBay: 1, doorPx: 32 + 18 },
 ];
 
+/** Puertas desplazadas por una fachada externa (la del bar «Kater» tiene la puerta en otro vano). */
+const doorOverride = new Map<PlacedBuilding, number>();
+
 function doorPos(b: PlacedBuilding) {
-  return { x: b.x0 + b.doorPx / HALF_W, y: b.y0 + b.wy + 0.5 };
+  return { x: b.x0 + (doorOverride.get(b) ?? b.doorPx) / HALF_W, y: b.y0 + b.wy + 0.5 };
 }
 
 export class StreetScene extends WorldScene {
@@ -42,6 +45,11 @@ export class StreetScene extends WorldScene {
 
   create(data?: { x?: number; y?: number; from?: string }) {
     this.initWorld({ x0: 0.25, y0: 4.25, x1: MAP_W - 0.25, y1: 12.7 });
+    doorOverride.clear();
+    for (const b of BUILDINGS) {
+      const f = this.registry.get(`facade:${b.kind}`) as { door?: number } | undefined;
+      if (f?.door !== undefined) doorOverride.set(b, f.door);
+    }
     this.brains = [];
     this.cameras.main.setBackgroundColor(PAL.night);
     // noche oscura y misteriosa: solo se ve bien lo que alumbran farolas, ventanas y neones
@@ -143,8 +151,10 @@ export class StreetScene extends WorldScene {
 
   private buildBuildings() {
     for (const b of BUILDINGS) {
-      const art = buildingArt(b);
-      const key = `bld_${b.kind}_${b.x0}`;
+      // fachada externa (manifiesto «facades»): el bar «Kater» reproducido de su ilustración
+      const facade = this.registry.get(`facade:${b.kind}`) as { door?: number; lights: Light[] } | undefined;
+      const art = facade ? facadeArt(b, this.textures.get(`facade_${b.kind}`).getSourceImage() as HTMLImageElement, facade.lights) : buildingArt(b);
+      const key = `bld_${b.kind}_${b.x0}${facade ? '_ext' : ''}`;
       if (!this.textures.exists(key)) this.textures.addCanvas(key, art.canvas);
       const s = toScreen(b.x0, b.y0);
       const ox = s.x - art.anchorX;
