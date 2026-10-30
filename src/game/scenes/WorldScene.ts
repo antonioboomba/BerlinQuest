@@ -52,6 +52,7 @@ export abstract class WorldScene extends Phaser.Scene {
   private nightRT: Phaser.GameObjects.RenderTexture | null = null;
   private nightBrush: Phaser.GameObjects.Image | null = null;
   private nightCfg = { color: 0x05060f, alpha: 0.7 };
+  private fog: { img: Phaser.GameObjects.Image; vx: number; base: number; phase: number }[] = [];
   private marker: Phaser.GameObjects.Image | null = null;
   private standPos: Pt | null = null;
 
@@ -70,6 +71,7 @@ export abstract class WorldScene extends Phaser.Scene {
     this.nightOn = false;
     this.nightLights = [];
     this.nightRT = null;
+    this.fog = [];
     this.transitioning = false;
     this.marker = null;
     this.standPos = null;
@@ -127,6 +129,26 @@ export abstract class WorldScene extends Phaser.Scene {
     this.nightRT = this.add.renderTexture(b.x, b.y, b.width, b.height).setOrigin(0, 0).setDepth(NIGHT_DEPTH);
     this.nightBrush = this.make.image({ key: 'glow_white', add: false });
     this.drawNight();
+  }
+
+  /**
+   * Niebla: bancos grandes, suaves y aplanados que derivan despacio por el mapa. Van entre la oscuridad y las
+   * luces, así que las farolas los tiñen. count bancos, color y opacidad máxima.
+   */
+  protected addFog(count: number, color: string, alpha: number) {
+    const b = this.cameras.main.getBounds();
+    const tint = Phaser.Display.Color.HexStringToColor(color).color;
+    for (let i = 0; i < count; i++) {
+      const r = 150 + Math.random() * 170;
+      const base = alpha * (0.55 + Math.random() * 0.45);
+      const img = this.add
+        .image(b.x + Math.random() * b.width, b.y + 120 + Math.random() * (b.height - 160), 'glow_white')
+        .setTint(tint)
+        .setAlpha(base)
+        .setScale(r / 64, (r / 64) * (0.35 + Math.random() * 0.2))
+        .setDepth(NIGHT_DEPTH + 0.5);
+      this.fog.push({ img, vx: (6 + Math.random() * 10) * (Math.random() < 0.7 ? 1 : -1), base, phase: Math.random() * Math.PI * 2 });
+    }
   }
 
   private drawNight() {
@@ -294,6 +316,18 @@ export abstract class WorldScene extends Phaser.Scene {
     // parpadeo sutil de luces
     for (const f of this.flicker) f.img.setAlpha(f.base * (0.92 + Math.random() * 0.08));
     if (this.nightRT) this.drawNight();
+    if (this.fog.length) {
+      const b = this.cameras.main.getBounds();
+      const dt = deltaMs / 1000;
+      const t = this.time.now / 1000;
+      for (const f of this.fog) {
+        f.img.x += f.vx * dt;
+        const half = f.img.displayWidth / 2;
+        if (f.img.x - half > b.right) f.img.x = b.x - half;
+        else if (f.img.x + half < b.x) f.img.x = b.right + half;
+        f.img.setAlpha(f.base * (0.8 + 0.2 * Math.sin(t * 0.3 + f.phase))); // respira despacio
+      }
+    }
 
     this.worldUpdate(dt);
 

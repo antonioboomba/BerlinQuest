@@ -90,6 +90,7 @@ export class StreetScene extends WorldScene {
     const br = toScreen(MAP_W, 0);
     this.cameras.main.setBounds(tl.x - 64, -260, br.x - tl.x + 128, toScreen(MAP_W, MAP_H).y + 300);
     this.buildNight();
+    this.addFog(52, '#a3abc0', 0.55); // bastante niebla, más densa sobre el canal y la calle
 
     this.objectivePoi = () => {
       const q = GameState.data.quest;
