@@ -5,7 +5,6 @@ import { depthOf, HALF_H, HALF_W, TILE_H, TILE_W, toScreen } from '../iso';
 import { GameState } from '../state/GameState';
 import { Actor } from '../world/Actor';
 import { BenchBrain, ChatBrain, PatrolBrain, StaticBrain, type Brain } from '../world/Npc';
-import type { PropInfo } from '../art/sprites';
 import { WorldScene } from './WorldScene';
 
 // Manzana compacta de Kreuzberg: una fila de edificios, calle adoquinada, plaza con U-Bahn y canal.
@@ -61,7 +60,6 @@ export class StreetScene extends WorldScene {
     this.buildBuildings();
     this.buildStreetFurniture();
     this.buildUbahn(3, 10);
-    this.buildCurrywurst(12.45, 10.7); // entre la papelera y el cartel KREUZBERG, pegado a los pilotes
     this.buildCanal();
     this.spawnNpcs();
 
@@ -258,6 +256,13 @@ export class StreetScene extends WorldScene {
       ['bike_turquoise', 'bike_blue', 0.7, 11.9],
       ['bike_red_locked', 'bike_red', 1.6, 11.9],
       ['bike_green_cargo', 'bike_green', 2.5, 11.9],
+      // donde estaba el puesto de currywurst: entre la papelera y el cartel KREUZBERG, junto a los pilotes
+      ['bike_turquoise', 'bike_blue', 9.8, 9.75],
+      ['bike_black_basket', 'bike_blue', 10.7, 9.75],
+      ['bike_red_locked', 'bike_red', 11.6, 9.75],
+      ['bike_green_cargo', 'bike_green', 9.8, 10.65],
+      ['bike_turquoise', 'bike_blue', 10.7, 10.65],
+      ['bike_black_basket', 'bike_blue', 11.6, 10.65],
     ];
     for (const [ext, proc, x, y] of bikes) this.placeProp(this.propKey(ext, proc), x, y, { block: [0.9, 0.4] });
     this.placeProp('bench', 7.6, 12.2, { block: [1.6, 0.5] });
@@ -377,38 +382,6 @@ export class StreetScene extends WorldScene {
     });
     this.pois.push({ ...entry, icon: 'U', label: 'U-Bahn' });
     this.minimap.push({ rect: { x0, y0, x1: x0 + wx, y1: y0 + wy }, color: 0x2a5ad8 });
-  }
-
-  /**
-   * Puesto de currywurst (PNG externo, manifiesto «currywurst») a lo largo del canal. Base de 3,2 × 1,3 casillas
-   * con la esquina delantera en (cx, cy): el lado largo (mostrador) mira a +y, hacia el río. Se dibuja en franjas verticales de 4 px, cada una
-   * con la profundidad del punto de la base más cercano a la cámara en esa columna, para que los personajes
-   * queden delante o detrás correctamente a lo largo de todo el puesto. Sin el PNG no se coloca nada.
-   */
-  private buildCurrywurst(cx: number, cy: number) {
-    const info = this.registry.get('prop:currywurst') as PropInfo | undefined;
-    if (!info) return;
-    const LX = 3.2;
-    const LY = 1.3;
-    const tex = this.textures.get('currywurst');
-    const src = tex.getSourceImage() as HTMLImageElement;
-    const s = toScreen(cx, cy);
-    const ox = Math.round(s.x) - info.anchor.x;
-    const oy = Math.round(s.y) - info.anchor.y;
-    for (let x0 = 0; x0 < src.width; x0 += 4) {
-      const dx = x0 + 2 - info.anchor.x; // columna respecto de la esquina delantera
-      const front = dx >= 0 ? { x: cx, y: cy - Math.min(LY, dx / HALF_W) } : { x: cx - Math.min(LX, -dx / HALF_W), y: cy };
-      this.add
-        .image(ox, oy, 'currywurst')
-        .setOrigin(0, 0)
-        .setCrop(x0, 0, Math.min(4, src.width - x0), src.height)
-        .setDepth(depthOf(front.x, front.y) - 0.05);
-    }
-    const lamp = toScreen(cx - LX / 2, cy + 0.3);
-    this.addGlow(lamp.x, lamp.y - 30, PAL.lampGlow, 70, 0.32, depthOf(cx - LX / 2, cy) + 0.1);
-    this.collision.add(cx - LX, cy - LY, cx, cy);
-    this.interactables.push({ x: cx - LX / 2, y: cy + 0.4, radius: 1.2, label: () => 'Pedir en el Imbiss', action: () => this.ui.openDialog('imbiss') });
-    this.minimap.push({ rect: { x0: cx - LX, y0: cy - LY, x1: cx, y1: cy }, color: 0xc8283c });
   }
 
   private buildCanal() {

@@ -356,17 +356,6 @@ export const DIALOGS: Record<string, Dialog> = {
       },
     },
   },
-  imbiss: {
-    start: 'a',
-    nodes: {
-      a: {
-        speaker: 'sign',
-        de: 'Einmal Currywurst mit Pommes, bitte! – Kommt sofort!',
-        es: '¡Una currywurst con patatas fritas, por favor! – ¡Marchando! (Comprar comida: próximamente.)',
-        vocab: ['currywurst', 'pommes'],
-      },
-    },
-  },
   ubahn: {
     start: 'a',
     nodes: {
