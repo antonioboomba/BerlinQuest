@@ -40,7 +40,7 @@ export class BootScene extends Phaser.Scene {
     }
 
     // ── Suelos ──
-    const kinds: TileKind[] = ['cobble', 'slab', 'curb', 'grass', 'water', 'wood', 'tiles', 'carpet', 'asphaltDark'];
+    const kinds: TileKind[] = ['cobble', 'slab', 'curb', 'grass', 'water', 'wood', 'tiles', 'carpet', 'asphaltDark', 'lino', 'carpetBlue'];
     for (const k of kinds) for (let v = 0; v < TILE_VARIANTS; v++) tex.addCanvas(`tile_${k}_${v}`, tileCanvas(k, v));
 
     // ── Objetos ──
@@ -61,6 +61,13 @@ export class BootScene extends Phaser.Scene {
     add('litfass', P.litfass());
     add('chalkboard', P.chalkboard(['BIER 3€', 'WEIN 4€', 'LIMO 2€']));
     add('mailbox', P.mailbox());
+    add('amt_seat', P.waitSeat());
+    add('amt_seat_back', P.waitSeatBack());
+    add('form_rack', P.formRack());
+    add('pult', P.pult());
+    add('cooler', P.waterCooler());
+    add('monitor', P.monitor());
+    tex.addCanvas('marker', P.marker());
     add('street_sign', P.streetSign('KREUZBERG'));
     add('railing', P.railingX());
     add('terrace_table', P.terraceTable());
@@ -87,6 +94,6 @@ export class BootScene extends Phaser.Scene {
 
     const loc = GameState.data.location;
     this.scene.launch('UI');
-    this.scene.start(loc?.scene === 'Bar' ? 'Bar' : 'Street', loc ? { x: loc.x, y: loc.y } : undefined);
+    this.scene.start(loc?.scene === 'Bar' || loc?.scene === 'Amt' ? loc.scene : 'Street', loc ? { x: loc.x, y: loc.y } : undefined);
   }
 }

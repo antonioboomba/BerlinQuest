@@ -1,5 +1,6 @@
 import '@fontsource/dotgothic16/400.css';
 import Phaser from 'phaser';
+import { AmtScene } from './scenes/AmtScene';
 import { BarScene } from './scenes/BarScene';
 import { BootScene } from './scenes/BootScene';
 import { StreetScene } from './scenes/StreetScene';
@@ -25,7 +26,7 @@ async function start() {
     // canvas a píxeles físicos; el zoom 1/DPR lo devuelve a su tamaño CSS sin reescalado borroso
     scale: { mode: Phaser.Scale.NONE, width: Math.round(window.innerWidth * getDPR()), height: Math.round(window.innerHeight * getDPR()), zoom: 1 / getDPR() },
     input: { activePointers: 3 },
-    scene: [BootScene, StreetScene, BarScene, UIScene],
+    scene: [BootScene, StreetScene, BarScene, AmtScene, UIScene],
   });
   window.addEventListener('resize', () => {
     const d = getDPR();

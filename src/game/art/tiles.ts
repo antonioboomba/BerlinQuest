@@ -4,7 +4,7 @@ import { makeCanvas, rng, shade } from './pixel';
 
 // Baldosas isométricas de 64×32 con patrones limpios alineados a los ejes (u, v) de la baldosa.
 
-export type TileKind = 'cobble' | 'slab' | 'curb' | 'grass' | 'water' | 'wood' | 'tiles' | 'carpet' | 'asphaltDark';
+export type TileKind = 'cobble' | 'slab' | 'curb' | 'grass' | 'water' | 'wood' | 'tiles' | 'carpet' | 'asphaltDark' | 'lino' | 'carpetBlue';
 
 type Painter = (u: number, v: number, r: () => number) => string | null;
 
@@ -103,6 +103,18 @@ const PAINTERS: Record<TileKind, Painter> = {
     return d < 0.08 ? '#c06a5a' : '#9e3a4a';
   },
   asphaltDark: (_u, _v, r) => (r() < 0.05 ? '#4a4a5a' : '#3e3e4c'),
+  // Linóleo de oficina: losetas grandes gris azulado con junta clara.
+  lino: (u, v, r) => {
+    const fu = frac(u * 2);
+    const fv = frac(v * 2);
+    if (fu < 0.03 || fv < 0.03) return '#b9c2cc';
+    const base = (Math.floor(u * 2) + Math.floor(v * 2)) % 2 ? '#d6dde4' : '#ccd4dc';
+    return r() < 0.03 ? shade(base, 0.96) : base;
+  },
+  carpetBlue: (u, v) => {
+    if (u < 0.03 || v < 0.03) return '#2f4a7a';
+    return frac(u * 4 + v * 4) < 0.1 ? '#4a6aa8' : '#3b5a94';
+  },
 };
 
 export function tileCanvas(kind: TileKind, variant = 0): HTMLCanvasElement {

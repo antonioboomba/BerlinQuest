@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import type { Light } from '../art/buildings';
-import { depthOf, HALF_H, HALF_W, screenDirToWorld, TILE_H, TILE_W, toScreen, zoomFor } from '../iso';
+import { depthOf, HALF_H, HALF_W, screenDirToWorld, TILE_H, TILE_W, toScreen, zoomFor, type Facing } from '../iso';
 import { GameState } from '../state/GameState';
 import { Actor } from '../world/Actor';
 import { CollisionMap, type Pt, type Rect } from '../world/Collision';
@@ -42,6 +42,8 @@ export abstract class WorldScene extends Phaser.Scene {
   private currentTarget: Interactable | null = null;
   private transitioning = false;
   private flicker: { img: Phaser.GameObjects.Image; base: number }[] = [];
+  private marker: Phaser.GameObjects.Image | null = null;
+  private standPos: Pt | null = null;
 
   abstract readonly displayName: string;
 
@@ -56,6 +58,8 @@ export abstract class WorldScene extends Phaser.Scene {
     this.pois = [];
     this.flicker = [];
     this.transitioning = false;
+    this.marker = null;
+    this.standPos = null;
     this.collision = new CollisionMap(bounds);
     const kb = this.input.keyboard!;
     this.keys = kb.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT,SHIFT,E,SPACE') as Record<string, Phaser.Input.Keyboard.Key>;
@@ -77,6 +81,15 @@ export abstract class WorldScene extends Phaser.Scene {
     this.applyZoom();
     cam.fadeIn(350, 7, 10, 18);
     this.scene.bringToTop('UI');
+    // flecha de objetivo flotando sobre el destino actual
+    this.marker = this.add.image(0, 0, 'marker').setOrigin(0.5, 1).setDepth(2e5).setVisible(false);
+  }
+
+  /** Sienta al jugador; al moverse se levanta y vuelve a standPos. */
+  sitPlayer(seat: Pt, facing: Facing, standPos: Pt) {
+    this.player.setPos(seat.x, seat.y);
+    this.player.sit(facing);
+    this.standPos = standPos;
   }
 
   private applyZoom() {
@@ -169,6 +182,11 @@ export abstract class WorldScene extends Phaser.Scene {
       }
     }
     const p = this.player;
+    if ((mx || my) && p.sitting) {
+      p.stand();
+      if (this.standPos) p.setPos(this.standPos.x, this.standPos.y);
+      this.standPos = null;
+    }
     if (mx || my) {
       const len = Math.min(1, Math.hypot(mx, my));
       const dir = screenDirToWorld(mx, my);
@@ -202,6 +220,15 @@ export abstract class WorldScene extends Phaser.Scene {
     for (const f of this.flicker) f.img.setAlpha(f.base * (0.92 + Math.random() * 0.08));
 
     this.worldUpdate(dt);
+
+    // marcador de objetivo
+    if (this.marker) {
+      const poi = this.objectivePoi();
+      if (poi && !blocking) {
+        const s = toScreen(poi.x, poi.y);
+        this.marker.setPosition(Math.round(s.x), Math.round(s.y - 104 + Math.sin(this.time.now / 220) * 6)).setVisible(true);
+      } else this.marker.setVisible(false);
+    }
   }
 
   protected worldUpdate(_dt: number) {}

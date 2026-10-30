@@ -108,6 +108,11 @@ export const SPEAKERS: Record<string, { name: string; role: string }> = {
   guest4: { name: 'Mia', role: 'Amiga de Lea' },
   bouncer: { name: 'Türsteher', role: 'Portero del club' },
   sign: { name: 'Cartel', role: '' },
+  empfang: { name: 'Frau Lange', role: 'Recepción del Bürgeramt' },
+  yilmaz: { name: 'Frau Yilmaz', role: 'Funcionaria · Platz 3' },
+  becker: { name: 'Herr Becker', role: 'Funcionario · Platz 1' },
+  schmidt: { name: 'Frau Schmidt', role: 'Funcionaria · Platz 2' },
+  official: { name: 'Funcionario/a', role: 'Bürgeramt' },
 };
 
 export const DIALOGS: Record<string, Dialog> = {

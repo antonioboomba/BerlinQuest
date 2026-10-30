@@ -4,7 +4,7 @@ import { PAL } from '../art/palette';
 import { makeCanvas, outline, px, rect, rng, shade, shearFace } from '../art/pixel';
 import { DRINK_BY_ID, indefAkk, keinAkk, ORDERS, THANKS, THANKS_ES, type Order } from '../data/bar';
 import { depthOf, HALF_H, HALF_W, toScreen, type Facing } from '../iso';
-import { GameState, QUEST_PAY, QUEST_SERVE_TARGET, speakDe } from '../state/GameState';
+import { GameState, QUEST_SERVE_TARGET, speakDe } from '../state/GameState';
 import { Actor } from '../world/Actor';
 import type { Pt } from '../world/Collision';
 import { ChatBrain, PatrolBrain, type Brain } from '../world/Npc';
@@ -127,17 +127,20 @@ export class BarScene extends WorldScene {
     );
 
     this.objectivePoi = () => {
-      const step = GameState.data.quest.step;
-      if (step === 'talk_boss' || step === 'get_paid') return { x: this.mehmet.wx, y: 3.9 };
-      if (step === 'serve') {
-        const waiting = this.customers.find((c) => c.state === 'waiting');
-        if (!waiting) return null;
-        return this.player.heldId ? waiting.actor.pos : { x: FRIDGE.x + 0.5, y: 1.9 };
+      const q = GameState.data.quest;
+      if (q.id === 'shift') {
+        if (q.step === 'talk_boss' || q.step === 'get_paid') return { x: this.mehmet.wx, y: 3.9 };
+        if (q.step === 'serve') {
+          const waiting = this.customers.find((c) => c.state === 'waiting');
+          if (!waiting) return null;
+          return this.player.heldId ? waiting.actor.pos : { x: FRIDGE.x + 0.5, y: 1.9 };
+        }
       }
-      return null;
+      // la misión siguiente transcurre fuera: señalar la salida
+      return q.id === 'none' ? null : DOOR;
     };
 
-    if (GameState.data.quest.step === 'go_bar') {
+    if (GameState.isActive('shift', 'go_bar')) {
       GameState.setQuest('talk_boss');
       this.time.delayedCall(700, () => this.mehmet.say('Hey, du! Komm mal her!', '¡Eh, tú! ¡Ven aquí!', 3500));
     }
@@ -417,21 +420,24 @@ export class BarScene extends WorldScene {
   // ───────────── Misión: servir bebidas ─────────────
 
   private talkBoss() {
-    const step = GameState.data.quest.step;
-    const dialog = step === 'talk_boss' ? 'boss_intro' : step === 'serve' ? 'boss_busy' : step === 'get_paid' ? 'boss_pay' : 'boss_free';
+    const q = GameState.data.quest;
+    let dialog = 'boss_free';
+    if (q.id === 'shift') dialog = ({ talk_boss: 'boss_intro', serve: 'boss_busy', get_paid: 'boss_pay' } as Record<string, string>)[q.step] ?? 'boss_free';
+    else if (q.id === 'anmeldung') dialog = 'boss_reminder';
+    else if (GameState.isDone('anmeldung')) dialog = 'boss_proud';
     this.mehmet.face(this.player.pos);
-    this.ui.openDialog(dialog, this.mehmet, (action) => {
-      if (action === 'quest:serve') {
-        GameState.setQuest('serve');
-        this.spawnTimer = 1;
-      }
-      if (action === 'quest:pay') {
-        GameState.addMoney(QUEST_PAY);
-        const xp = GameState.addXp(50);
-        GameState.setQuest('done');
-        this.ui.toast({ title: 'Misión completada: Tu primer turno', lines: [`+${xp} XP`, `+${QUEST_PAY} € de sueldo`], icon: 'cash', tone: 'gold' });
-      }
-    });
+    this.ui.openDialog(dialog, this.mehmet, (action) => this.onBossAction(action));
+  }
+
+  private onBossAction(action: string) {
+    if (action === 'quest:serve') {
+      GameState.setQuest('serve');
+      this.spawnTimer = 1;
+    }
+    // tras pagar, Mehmet encarga la Anmeldung (Misión 02) en cuanto se cierra el diálogo
+    if (action === 'quest:pay') this.ui.afterDialog(() => this.ui.openDialog('boss_amt', this.mehmet, (a) => this.onBossAction(a)));
+    // recompensa (30 € + XP), aviso de misión completada y arranque de la Misión 02
+    if (action === 'quest:complete_shift' && GameState.isActive('shift')) GameState.completeQuest();
   }
 
   private nextOrder(): Order {
@@ -502,7 +508,7 @@ export class BarScene extends WorldScene {
         tone: 'acid',
       });
       const q = GameState.data.quest;
-      if (q.step === 'serve') {
+      if (GameState.isActive('shift', 'serve')) {
         q.served++;
         if (q.served >= QUEST_SERVE_TARGET) {
           GameState.setQuest('get_paid');
@@ -562,15 +568,15 @@ export class BarScene extends WorldScene {
 
   protected worldUpdate(dt: number) {
     for (const b of this.brains) b.update(dt);
-    const step = GameState.data.quest.step;
-    if (step === 'serve' || step === 'get_paid' || step === 'done') {
+    const serving = GameState.isActive('shift', 'serve');
+    if (serving || GameState.isActive('shift', 'get_paid') || GameState.isDone('shift')) {
       this.spawnTimer -= dt;
       const active = this.customers.filter((c) => c.state === 'entering' || c.state === 'waiting').length;
       // durante la misión, de uno en uno; después, hasta dos a la vez
-      const max = step === 'serve' ? 1 : 2;
+      const max = serving ? 1 : 2;
       if (this.spawnTimer <= 0 && active < max) {
         this.spawnCustomer();
-        this.spawnTimer = step === 'serve' ? 3 : 10 + Math.random() * 8;
+        this.spawnTimer = serving ? 3 : 10 + Math.random() * 8;
       }
     }
     // los clientes que esperan miran al jugador si está cerca

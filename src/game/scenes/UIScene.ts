@@ -4,9 +4,13 @@ import { VOCAB, vocabLabel } from '../../data/vocabulary';
 import { resolveLevelText } from '../../engine/dialogue';
 import { mastery } from '../../engine/srs';
 import { CEFR_LEVELS } from '../../engine/types';
-import { DIALOGS, DRINKS, SPEAKERS, type DChoice, type DNode } from '../data/bar';
+import { DIALOGS as BAR_DIALOGS, DRINKS, SPEAKERS, type DChoice, type DNode } from '../data/bar';
+
+const DIALOGS = { ...BAR_DIALOGS, ...AMT_DIALOGS };
 import { toScreen } from '../iso';
-import { GameState, QUEST_STEPS, speakDe } from '../state/GameState';
+import { AMT_DIALOGS } from '../data/amt';
+import { QUESTS, type FormField } from '../data/quests';
+import { GameState, speakDe, type QuestCompletion } from '../state/GameState';
 import { touchInput } from '../ui/touch';
 import type { Actor } from '../world/Actor';
 import type { WorldScene } from './WorldScene';
@@ -97,13 +101,26 @@ export class UIScene extends Phaser.Scene {
   private miniRect = { x: 0, y: 0, w: 200, h: 150 };
   private toastTop = 120;
   private touchUi: Phaser.GameObjects.Container | null = null;
+  private speakerOverride: string | null = null;
+  private afterDialogQueue: (() => void)[] = [];
+  private bannerQueue: QuestCompletion[] = [];
+  private banner: Phaser.GameObjects.Container | null = null;
+  private form: { box: Phaser.GameObjects.Container; fields: FormField[]; idx: number; values: string[]; feedback?: { text: string; ok: boolean }; done: () => void } | null = null;
+  private picker: {
+    box: Phaser.GameObjects.Container;
+    title: string;
+    sub: string;
+    items: { id: string; label: string; sub: string; icon: string }[];
+    sel: number;
+    onPick: (id: string) => void;
+  } | null = null;
 
   constructor() {
     super('UI');
   }
 
   get world(): WorldScene | null {
-    for (const key of ['Bar', 'Street']) {
+    for (const key of ['Bar', 'Amt', 'Street']) {
       const s = this.scene.get(key) as WorldScene;
       if (s && this.scene.isActive(key)) return s;
     }
@@ -111,7 +128,7 @@ export class UIScene extends Phaser.Scene {
   }
 
   isBlocking() {
-    return !!(this.dialog || this.fridge || this.modal);
+    return !!(this.dialog || this.fridge || this.modal || this.form || this.picker || this.banner);
   }
 
   create() {
@@ -122,7 +139,15 @@ export class UIScene extends Phaser.Scene {
     if (this.touchUi) this.buildTouch();
 
     const kb = this.input.keyboard!;
-    kb.on('keydown-ESC', () => (this.fridge ? this.closeFridge(null) : this.modal ? this.closeModal() : this.dialog ? this.closeDialog() : this.openModal('pause')));
+    kb.on('keydown-ESC', () => {
+      if (this.banner) return this.closeBanner();
+      if (this.picker) return this.closePicker();
+      if (this.form) return this.closeForm();
+      if (this.fridge) return this.closeFridge(null);
+      if (this.modal) return this.closeModal();
+      if (this.dialog) return this.closeDialog();
+      this.openModal('pause');
+    });
     kb.on('keydown-M', () => this.toggleModal('map'));
     kb.on('keydown-I', () => this.toggleModal('inv'));
     kb.on('keydown-P', () => this.toggleModal('progress'));
@@ -132,11 +157,13 @@ export class UIScene extends Phaser.Scene {
     kb.on('keydown-DOWN', () => this.moveSel(1));
     kb.on('keydown-W', () => this.isBlocking() && this.moveSel(-1));
     kb.on('keydown-S', () => this.isBlocking() && this.moveSel(1));
-    ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE'].forEach((k, i) => kb.on(`keydown-${k}`, () => this.pick(i)));
+    ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE'].forEach((k, i) => kb.on(`keydown-${k}`, () => this.pick(i)));
 
     GameState.on('change', this.onStateChange, this);
+    GameState.on('questComplete', (r: QuestCompletion) => this.bannerQueue.push(r));
     GameState.on('levelup', (lvl: number) => this.toast({ title: `¡Nivel ${lvl}!`, lines: ['Nuevas oportunidades te esperan.'], tone: 'gold' }));
     this.events.once('shutdown', () => GameState.off('change', this.onStateChange, this));
+    this.events.once('shutdown', () => GameState.removeAllListeners('questComplete'));
     this.scale.on('resize', this.layout, this);
     this.layout();
   }
@@ -304,20 +331,24 @@ export class UIScene extends Phaser.Scene {
     c.add([this.head(x + PAD + 26, 22, 'Objetivo', T.md, C.gold), this.text(x + PAD, 60, o.icon, T.lg), body]);
     this.toastTop = 16 + h + 12;
 
-    const step = GameState.data.quest.step;
-    if (step !== 'done') {
-      const order = QUEST_STEPS.map((s) => s.step);
-      const cur = order.indexOf(step);
-      const rowH = 34;
+    const def = GameState.questDef;
+    if (def) {
+      const q = GameState.data.quest;
+      const cur = def.steps.findIndex((s) => s.id === q.step);
+      // ventana de hasta 5 pasos alrededor del actual
+      const start = Math.max(0, Math.min(cur - 1, def.steps.length - 5));
+      const visible = def.steps.slice(start, start + 5);
       const cy = 16 + h + 10;
-      const ch = 52 + QUEST_STEPS.length * rowH;
       const lg = this.add.graphics();
-      this.panel(lg, x, cy, w, ch, 14);
-      c.add([lg, this.head(x + PAD, cy + 10, 'Tu primer turno', T.md)]);
-      QUEST_STEPS.forEach((s, i) => {
+      c.add([lg, this.head(x + PAD, cy + 10, `${def.code} · ${def.title}`, T.sm, C.gold)]);
+      let yy = cy + 48;
+      visible.forEach((s, vi) => {
+        const i = start + vi;
         const doneStep = i < cur;
         const active = i === cur;
-        const yy = cy + 48 + i * rowH;
+        const label = s.id === 'serve' ? `${s.label} (${Math.min(q.served, 3)}/3)` : s.label;
+        const t = this.text(x + PAD + 32, yy - 1, label, T.sm, active ? C.white : C.muted, active, w - PAD * 2 - 36);
+        const rowH = Math.max(34, t.displayHeight + 12);
         const b = this.add.graphics();
         if (active) b.fillStyle(C.panelHi, 1).fillRoundedRect(x + 8, yy - 5, w - 16, rowH - 2, 8);
         b.lineStyle(2, doneStep ? 0x6dffa8 : active ? 0xffffff : 0x7a88a8, 1).strokeRoundedRect(x + PAD, yy, 20, 20, 5);
@@ -325,9 +356,15 @@ export class UIScene extends Phaser.Scene {
           b.fillStyle(0x6dffa8, 1).fillRoundedRect(x + PAD, yy, 20, 20, 5);
           b.lineStyle(3, 0x111a2e, 1).beginPath().moveTo(x + PAD + 4, yy + 10).lineTo(x + PAD + 9, yy + 15).lineTo(x + PAD + 16, yy + 5).strokePath();
         }
-        const label = s.step === 'serve' ? `${s.label} (${Math.min(GameState.data.quest.served, 3)}/3)` : s.label;
-        c.add([b, this.text(x + PAD + 32, yy - 1, label, T.sm, active ? C.white : C.muted, active, w - PAD * 2 - 36)]);
+        c.add([b, t]);
+        yy += rowH;
       });
+      if (start + visible.length < def.steps.length) {
+        c.add(this.text(x + PAD + 32, yy - 4, `… ${def.steps.length - start - visible.length} pasos más`, T.xs, C.muted));
+        yy += 20;
+      }
+      const ch = yy - cy + 6;
+      this.panel(lg, x, cy, w, ch, 14);
       this.toastTop = cy + ch + 12;
     }
     this.reflowToasts();
@@ -393,6 +430,13 @@ export class UIScene extends Phaser.Scene {
   // ───────────── Bucle: minimapa, aviso, bocadillos ─────────────
 
   update() {
+    const free = !this.dialog && !this.fridge && !this.form && !this.picker;
+    if (free && this.afterDialogQueue.length) {
+      const q = this.afterDialogQueue;
+      this.afterDialogQueue = [];
+      q.forEach((fn) => fn());
+    }
+    if (free && !this.modal && !this.banner && !this.dialog && this.bannerQueue.length) this.showBanner(this.bannerQueue.shift()!);
     const world = this.world;
     if (!world || !world.player) return;
     const cam = world.cameras.main;
@@ -536,8 +580,10 @@ export class UIScene extends Phaser.Scene {
 
   // ───────────── Diálogos ─────────────
 
-  openDialog(id: string, actor?: Actor, onAction?: (a: string) => void) {
+  /** «speaker»: sustituye al hablante genérico del funcionario (yilmaz/official) por el del puesto. */
+  openDialog(id: string, actor?: Actor, onAction?: (a: string) => void, speaker?: string) {
     if (!DIALOGS[id]) return;
+    this.speakerOverride = speaker ?? null;
     this.dialogState = { id, node: DIALOGS[id].start, sel: 0, onAction, actor, firstTry: true };
     GameState.bumpStat('talks');
     this.enterNode();
@@ -581,7 +627,8 @@ export class UIScene extends Phaser.Scene {
     const tx = x + 176;
     const tw = w - 176 - PAD - 10;
 
-    const sp = SPEAKERS[n.speaker] ?? { name: n.speaker, role: '' };
+    const speakerKey = this.speakerOverride && (n.speaker === 'yilmaz' || n.speaker === 'official') ? this.speakerOverride : n.speaker;
+    const sp = SPEAKERS[speakerKey] ?? { name: speakerKey, role: '' };
     const title = this.head(tx, 0, sp.role ? `${sp.name}  ·  ${sp.role}` : sp.name, T.md, C.gold);
     const de = this.text(tx, 0, this.fill(resolveLevelText(n.de, level)), T.lg, C.white, false, tw - 40);
     const es = tr ? this.text(tx, 0, this.fill(resolveLevelText(n.es, level)), T.md, C.muted, false, tw - 14) : null;
@@ -601,8 +648,8 @@ export class UIScene extends Phaser.Scene {
     // retrato
     g.fillStyle(C.panelHi, 1).fillRoundedRect(x + PAD, y + PAD, 136, 136, 14);
     g.lineStyle(2, C.border, 1).strokeRoundedRect(x + PAD, y + PAD, 136, 136, 14);
-    if (this.textures.exists(n.speaker)) {
-      const img = this.add.image(x + PAD + 68, y + PAD + 4, n.speaker, 0).setOrigin(0.5, 0).setScale(3.5);
+    if (this.textures.exists(speakerKey)) {
+      const img = this.add.image(x + PAD + 68, y + PAD + 4, speakerKey, 0).setOrigin(0.5, 0).setScale(3.5);
       img.setCrop(6, 0, 36, 37);
       box.add(img);
     } else box.add(this.text(x + PAD + 68, y + PAD + 68, '🪧', 60).setOrigin(0.5));
@@ -760,6 +807,9 @@ export class UIScene extends Phaser.Scene {
   // ───────────── Entrada común ─────────────
 
   advance() {
+    if (this.banner) return this.closeBanner();
+    if (this.picker) return this.pick(this.picker.sel);
+    if (this.form) return;
     if (this.fridge) return this.pick(this.fridge.sel);
     const d = this.dialogState;
     const n = this.curNode();
@@ -775,6 +825,12 @@ export class UIScene extends Phaser.Scene {
   }
 
   private pick(i: number) {
+    if (this.picker) {
+      const it = this.picker.items[i];
+      if (it) this.picker.onPick(it.id);
+      return;
+    }
+    if (this.form) return this.pickFormOption(i);
     if (this.fridge) {
       if (i < DRINKS.length) this.closeFridge(DRINKS[i].id);
       return;
@@ -784,6 +840,10 @@ export class UIScene extends Phaser.Scene {
   }
 
   private moveSel(dir: number) {
+    if (this.picker) {
+      this.picker.sel = (this.picker.sel + dir + this.picker.items.length) % this.picker.items.length;
+      return this.renderPicker();
+    }
     if (this.fridge) {
       this.fridge.sel = (this.fridge.sel + dir + DRINKS.length) % DRINKS.length;
       return this.renderFridge();
@@ -841,6 +901,14 @@ export class UIScene extends Phaser.Scene {
     // con un diálogo abierto, los avisos van a la columna izquierda para no tapar la traducción
     const left = !!this.dialog;
     let y = left ? 204 : this.toastTop;
+    // si no caben, se descartan los más antiguos
+    const room = this.H - 96 - y;
+    let total = this.toasts.reduce((a, t) => a + (t.getData('h') as number) + 10, 0);
+    while (total > room && this.toasts.length > 1) {
+      const old = this.toasts.shift()!;
+      total -= (old.getData('h') as number) + 10;
+      old.destroy();
+    }
     for (const t of this.toasts) {
       t.setPosition(left ? 16 : this.W - 396, y);
       y += (t.getData('h') as number) + 10;
@@ -947,15 +1015,18 @@ export class UIScene extends Phaser.Scene {
     c.add([
       this.text(r.x, r.y, `Nivel ${lv.level}   ·   ${d.xp} XP   ·   ${d.money.toFixed(2)} €   ·   Alemán ${d.settings.level}`, T.lg, C.white, true),
       this.text(r.x, r.y + 36, `Bebidas servidas: ${d.stats.served}     Errores: ${d.stats.wrong}     Conversaciones: ${d.stats.talks}`, T.sm, C.muted),
-      this.head(r.x, r.y + 76, 'Misión: Tu primer turno', T.md, C.gold),
+      this.head(r.x, r.y + 76, 'Misiones', T.md, C.gold),
     ]);
-    const order = QUEST_STEPS.map((s) => s.step);
-    const cur = d.quest.step === 'done' ? order.length : order.indexOf(d.quest.step);
-    QUEST_STEPS.forEach((s, i) =>
-      c.add(this.text(r.x + 4, r.y + 112 + i * 30, `${i < cur ? '✅' : i === cur ? '▶️' : '⬜'}   ${s.label}`, T.sm, i < cur ? C.muted : C.text, i === cur)),
-    );
+    QUESTS.forEach((qd, i) => {
+      const done = GameState.isDone(qd.id);
+      const active = d.quest.id === qd.id;
+      const step = active ? qd.steps.find((st) => st.id === d.quest.step) : null;
+      const status = done ? '✅  completada' : active ? `▶️  ${step?.label ?? ''}` : '🔒  bloqueada';
+      c.add(this.text(r.x + 4, r.y + 112 + i * 30, `${qd.code} · ${qd.title}  —  ${status}`, T.sm, done ? C.muted : active ? C.white : C.muted, active));
+    });
+    if (d.quest.id === 'none') c.add(this.text(r.x + 4, r.y + 112 + QUESTS.length * 30, '🏆  Has completado todo el contenido disponible.', T.sm, C.gold));
     const ids = Object.keys(d.vocab);
-    const vy = r.y + 112 + QUEST_STEPS.length * 30 + 22;
+    const vy = r.y + 112 + (QUESTS.length + 1) * 30 + 22;
     c.add(this.text(r.x, vy, `📚 Vocabulario aprendido: ${ids.length} palabras`, T.md, C.acid, true));
     const colW = r.w / 2;
     const rowH = 30;
@@ -966,7 +1037,7 @@ export class UIScene extends Phaser.Scene {
       const dot = { new: '🔹', learning: '🔸', known: '🟣', mastered: '🟢' }[mastery(d.vocab[id])];
       c.add(this.text(r.x + (i % 2) * colW, vy + 38 + Math.floor(i / 2) * rowH, `${dot} ${vocabLabel(v)} — ${v.es}`, T.sm, C.text, false, colW - 16));
     });
-    if (ids.length > maxRows * 2) c.add(this.text(r.x, r.y + r.h - 30, `… y ${ids.length - maxRows * 2} más (repásalas en Pausa → Repaso).`, T.xs, C.muted));
+    if (ids.length > maxRows * 2) c.add(this.text(r.x, r.y + r.h - 30, `… y ${ids.length - maxRows * 2} palabras más.`, T.xs, C.muted));
   }
 
   private fillPause(c: Phaser.GameObjects.Container, r: { x: number; y: number; w: number; h: number }) {
@@ -1023,6 +1094,219 @@ export class UIScene extends Phaser.Scene {
       c.add([g, t, hit]);
     });
     c.add(this.text(r.x, r.y + rows.length * (rowH + 8) + 6, 'WASD / flechas: caminar  ·  Shift: correr  ·  E: interactuar  ·  M I P: paneles', T.sm, C.muted, false, r.w));
+  }
+
+  // ───────────── Tras cerrar el diálogo ─────────────
+
+  /** Ejecuta fn en cuanto no haya diálogo ni menú abierto. */
+  afterDialog(fn: () => void) {
+    this.afterDialogQueue.push(fn);
+  }
+
+  // ───────────── Aviso de misión completada ─────────────
+
+  private showBanner(r: QuestCompletion) {
+    const W = this.W;
+    const H = this.H;
+    const c = this.add.container(0, 0).setDepth(60);
+    const dim = this.add.rectangle(0, 0, W, H, 0x05070d, 0.6).setOrigin(0).setInteractive();
+    dim.on('pointerdown', () => this.closeBanner());
+    const w = Math.min(640, W - 40);
+    const lines: [string, number, string][] = [
+      [`${r.def.code} · ${r.def.title}`, T.lg, C.white],
+      [r.def.outro, T.sm, C.muted],
+      [[`+${r.xp} XP`, r.money ? `+${r.money} €` : '', ...(r.def.reward.items ?? []).map((i) => `📜 ${ITEMS[i]?.de ?? i}`)].filter(Boolean).join('     '), T.md, C.acid],
+      [r.next ? `Nueva misión → ${r.next.code} · ${r.next.title}` : '🏆  Has completado todo el contenido disponible. ¡Pronto habrá más misiones!', T.sm, C.gold],
+    ];
+    const texts = lines.map(([t, size, col]) => this.text(0, 0, t, size, col, false, w - 60).setAlign('center'));
+    const title = this.text(0, 0, '★  ¡MISIÓN COMPLETADA!  ★', T.xl, C.gold);
+    const h = 60 + title.displayHeight + texts.reduce((a, t) => a + t.displayHeight + 14, 0) + 40;
+    const x = Math.round((W - w) / 2);
+    const y = Math.round((H - h) / 2 - 40);
+    const g = this.add.graphics();
+    this.panel(g, x, y, w, h, 18, 0xffd77a);
+    g.lineStyle(2, 0xffd77a, 0.4).strokeRoundedRect(x + 8, y + 8, w - 16, h - 16, 12);
+    title.setPosition(Math.round(x + (w - title.displayWidth) / 2), y + 28);
+    let ty = y + 36 + title.displayHeight + 14;
+    for (const t of texts) {
+      t.setPosition(Math.round(x + (w - t.displayWidth) / 2), Math.round(ty));
+      ty += t.displayHeight + 14;
+    }
+    const hint = this.text(0, 0, 'E / Enter para continuar', T.xs, C.muted);
+    hint.setPosition(Math.round(x + (w - hint.displayWidth) / 2), y + h - 34);
+    c.add(dim);
+    // confeti (por detrás del panel, cae alrededor)
+    for (let i = 0; i < 40; i++) {
+      const side = i % 2 ? x - 30 - Math.random() * 120 : x + w + 30 + Math.random() * 120;
+      const piece = this.add.rectangle(side, y - 20, 6, 10, [0xffd77a, 0x6dffa8, 0x5fa8ff, 0xff8a96][i % 4]);
+      c.add(piece);
+      this.tweens.add({ targets: piece, y: y + h + 60 + Math.random() * 80, angle: 360 * (Math.random() - 0.5) * 2, alpha: 0, duration: 1600 + Math.random() * 1200, delay: Math.random() * 400 });
+    }
+    c.add([g, title, ...texts, hint]);
+    const panelParts = [g, title, ...texts, hint];
+    for (const o of panelParts) o.setAlpha(0);
+    this.tweens.add({ targets: panelParts, alpha: 1, duration: 300 });
+    this.tweens.add({ targets: title, scale: { from: title.scale * 0.6, to: title.scale }, duration: 500, ease: 'Back.easeOut' });
+    this.banner = c;
+    this.time.delayedCall(7000, () => this.banner === c && this.closeBanner());
+  }
+
+  private closeBanner() {
+    this.banner?.destroy();
+    this.banner = null;
+  }
+
+  // ───────────── Formulario interactivo (documento) ─────────────
+
+  openForm(fields: FormField[], done: () => void) {
+    this.form = { box: this.add.container(0, 0), fields, idx: 0, values: [], done };
+    this.renderForm();
+  }
+
+  private closeForm() {
+    this.form?.box.destroy();
+    this.form = null;
+  }
+
+  private pickFormOption(i: number) {
+    const f = this.form;
+    if (!f) return;
+    const field = f.fields[f.idx];
+    if (!field || i >= field.options.length) return;
+    if (i !== field.correct) {
+      f.feedback = { text: `✗  ${field.explain}`, ok: false };
+      this.renderForm();
+      return;
+    }
+    const fresh = GameState.learn(field.vocab ?? []);
+    if (fresh.length) this.toastWords(fresh);
+    f.values.push(field.options[i]);
+    f.feedback = { text: `✓  ${field.label}: ${field.options[i]}`, ok: true };
+    f.idx++;
+    if (f.idx >= f.fields.length) {
+      this.renderForm();
+      this.time.delayedCall(900, () => {
+        const cb = f.done;
+        this.closeForm();
+        cb();
+      });
+      return;
+    }
+    this.renderForm();
+  }
+
+  private renderForm() {
+    const f = this.form;
+    if (!f) return;
+    f.box.destroy();
+    const W = this.W;
+    const H = this.H;
+    const tr = GameState.data.settings.translations;
+    const ink = '#2a2238';
+    const w = Math.min(760, W - 40);
+    const rowH = 34;
+    const field = f.fields[f.idx];
+    const h = 120 + f.fields.length * rowH + (field ? 128 : 60);
+    const x = Math.round((W - w) / 2);
+    const y = Math.max(16, Math.round((H - h) / 2 - 40));
+    const box = this.add.container(0, 0).setDepth(25);
+    const g = this.add.graphics();
+    g.fillStyle(0x05070d, 0.45).fillRoundedRect(x + 4, y + 6, w, h, 6);
+    g.fillStyle(0xf7f1e3, 1).fillRoundedRect(x, y, w, h, 6);
+    g.lineStyle(3, 0xc9b98f, 1).strokeRoundedRect(x, y, w, h, 6);
+    g.fillStyle(0x22356b, 1).fillRect(x, y, w, 8);
+    box.add(g);
+    box.add(this.text(x + PAD, y + 20, 'Anmeldung bei der Meldebehörde', T.lg, ink));
+    box.add(this.text(x + PAD, y + 54, tr ? 'Declaración de empadronamiento · elige el dato correcto para cada casilla' : 'Bitte füllen Sie alle Felder aus.', T.xs, '#6a6070'));
+    f.fields.forEach((fd, i) => {
+      const yy = y + 88 + i * rowH;
+      const active = i === f.idx;
+      if (active) g.fillStyle(0xffe9a8, 1).fillRect(x + 10, yy - 4, w - 20, rowH - 2);
+      g.lineStyle(1, 0xc9b98f, 1).lineBetween(x + 260, yy + rowH - 8, x + w - PAD, yy + rowH - 8);
+      box.add(this.text(x + PAD, yy, fd.label + (tr ? `  (${fd.es})` : ''), T.xs, active ? ink : '#5a5060'));
+      if (f.values[i]) box.add(this.text(x + 270, yy - 2, f.values[i], T.md, '#1f4fd1'));
+    });
+    const oy = y + 88 + f.fields.length * rowH + 10;
+    if (f.feedback) box.add(this.text(x + PAD, oy, f.feedback.text, T.xs, f.feedback.ok ? '#2a8a4a' : '#c8283c', false, w - PAD * 2));
+    if (field) {
+      box.add(this.text(x + PAD, oy + 30, `¿Qué escribes en «${field.label}»?`, T.sm, ink));
+      const bw = Math.floor((w - PAD * 2 - 20) / field.options.length);
+      field.options.forEach((opt, i) => {
+        const bx = x + PAD + i * (bw + 10);
+        const by = oy + 62;
+        const bg = this.add.graphics();
+        bg.fillStyle(0xffffff, 1).fillRoundedRect(bx, by, bw, 44, 8);
+        bg.lineStyle(2, 0x22356b, 1).strokeRoundedRect(bx, by, bw, 44, 8);
+        const t = this.text(bx + 12, by + 10, `${i + 1}. ${opt}`, T.sm, ink, false, bw - 20);
+        const hit = this.add.rectangle(bx + bw / 2, by + 22, bw, 44, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
+        hit.on('pointerdown', () => this.pickFormOption(i));
+        box.add([bg, t, hit]);
+      });
+    } else {
+      box.add(this.text(x + PAD, oy + 30, '✓  Formular ausgefüllt!', T.md, '#2a8a4a'));
+    }
+    f.box = box;
+  }
+
+  // ───────────── Selector de objetos (entregar documentos) ─────────────
+
+  openPicker(title: string, sub: string, items: { id: string; label: string; sub: string; icon: string }[], onPick: (id: string) => void) {
+    this.picker = { box: this.add.container(0, 0), title, sub, items, sel: 0, onPick };
+    this.renderPicker();
+  }
+
+  closePicker() {
+    this.picker?.box.destroy();
+    this.picker = null;
+  }
+
+  private renderPicker() {
+    const p = this.picker;
+    if (!p) return;
+    p.box.destroy();
+    const W = this.W;
+    const H = this.H;
+    const tr = GameState.data.settings.translations;
+    const w = Math.min(560, W - 40);
+    const rowH = 58;
+    const title = this.text(0, 0, p.title, T.md, C.white, false, w - PAD * 2);
+    const sub = tr ? this.text(0, 0, p.sub, T.sm, C.muted, false, w - PAD * 2) : null;
+    const headH = 20 + title.displayHeight + (sub ? sub.displayHeight + 6 : 0) + 16;
+    const h = headH + p.items.length * rowH + 50;
+    const x = Math.round((W - w) / 2);
+    const y = Math.max(16, Math.round((H - h) / 2 - 40));
+    const box = this.add.container(0, 0).setDepth(25);
+    const g = this.add.graphics();
+    this.panel(g, x, y, w, h, 16);
+    box.add(g);
+    title.setPosition(x + PAD, y + 18);
+    box.add(title);
+    if (sub) {
+      sub.setPosition(x + PAD, y + 22 + title.displayHeight);
+      box.add(sub);
+    }
+    p.items.forEach((it, i) => {
+      const yy = y + headH + i * rowH;
+      const sel = i === p.sel;
+      const rg = this.add.graphics();
+      rg.fillStyle(sel ? 0x24407a : 0x18233c, 1).fillRoundedRect(x + 12, yy, w - 24, rowH - 8, 10);
+      rg.lineStyle(2, sel ? C.blue : C.borderSoft, 1).strokeRoundedRect(x + 12, yy, w - 24, rowH - 8, 10);
+      const icon = this.text(x + 26, yy + 8, it.icon, T.lg);
+      const label = this.text(x + 70, yy + (tr ? 2 : 12), it.label, T.md, C.white);
+      const s2 = this.text(x + 70, yy + 28, tr ? it.sub : '', T.xs, C.muted);
+      const num = this.text(x + w - 44, yy + 12, `${i + 1}`, T.md, C.muted);
+      const hit = this.add.rectangle(x + w / 2, yy + (rowH - 8) / 2, w - 24, rowH - 8, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
+      hit.on('pointerover', () => {
+        if (this.picker && this.picker.sel !== i) {
+          this.picker.sel = i;
+          this.renderPicker();
+        }
+      });
+      hit.on('pointerdown', () => this.pick(i));
+      box.add([rg, icon, label, s2, num, hit]);
+    });
+    box.add(this.text(x + PAD, y + h - 38, '↑↓ elegir   ·   E entregar   ·   ESC cerrar', T.sm, C.muted));
+    p.box = box;
   }
 
   // ───────────── Controles táctiles ─────────────

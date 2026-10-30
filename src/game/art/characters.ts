@@ -306,5 +306,11 @@ export const CHARACTERS: Record<string, CharStyle> = {
   guest2: { skin: '#8a5a3a', hair: '#1c1410', hairStyle: 'beanie', accent: '#ff7a2a', top: '#5a5a7a', jacket: true, pants: '#6a5a40', shoes: '#f2ece4' },
   guest3: { skin: '#f2c19e', hair: '#d9573a', hairStyle: 'short', top: '#f0c95a', accent: '#7a4a2a', sleeves: 'short', pants: '#3a4a7a', shoes: '#86532f', glasses: true },
   guest4: { skin: '#d9a07a', hair: '#5a3220', hairStyle: 'bob', top: '#c0507a', pants: '#2a2a38', shoes: '#2b2b36', skirt: true },
+  empfang: { skin: '#f2c19e', hair: '#c97a3a', hairStyle: 'bob', top: '#3b5bdb', accent: '#ffffff', jacket: true, pants: '#2a2a38', shoes: '#2b2b36', glasses: true },
+  yilmaz: { skin: '#d9a07a', hair: '#1c1410', hairStyle: 'long', top: '#7a4ab8', accent: '#ffd77a', jacket: true, pants: '#2a2a38', shoes: '#2b2b36' },
+  becker: { skin: '#f6caa6', hair: '#9a9aa6', hairStyle: 'short', top: '#e6e1ea', accent: '#c94a4a', sleeves: 'short', pants: '#3a3a4a', shoes: '#2b2b36', glasses: true },
+  schmidt: { skin: '#f0c4a2', hair: '#d9b26a', hairStyle: 'bun', top: '#3fa08a', accent: '#f2ece4', jacket: true, pants: '#3a3a4a', shoes: '#2b2b36', glasses: true },
+  citizen1: { skin: '#8a5a3a', hair: '#1c1410', hairStyle: 'curly', top: '#ff7a2a', sleeves: 'short', pants: '#2f3f6b', shoes: '#f2ece4' },
+  citizen2: { skin: '#f2c19e', hair: '#5a3220', hairStyle: 'cap', accent: '#3fa04a', top: '#e0675a', jacket: true, pants: '#4a4a5a', shoes: '#2b2b36', beard: true },
   bouncer: { skin: '#6a4028', hair: '#151018', hairStyle: 'bald', top: '#24242e', accent: '#3a3a48', jacket: true, pants: '#1c1c24', shoes: '#151018', beard: true, glasses: true },
 };

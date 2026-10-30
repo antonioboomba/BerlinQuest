@@ -430,3 +430,104 @@ export function cashIcon(): HTMLCanvasElement {
   outline(ctx, 28, 20, PAL.outline);
   return canvas;
 }
+
+// ───────────── Bürgeramt ─────────────
+
+/** Asiento de la sala de espera (la persona sentada mira al NE, hacia los puestos). */
+export function waitSeat(): PropArt {
+  const { canvas, ctx } = makeCanvas(40, 40);
+  groundShadow(ctx, 20, 36, 14, 4);
+  rect(ctx, 18, 18, 4, 18, '#9aa4b8');
+  rect(ctx, 18, 18, 1, 18, '#d8dde8');
+  fillEllipse(ctx, 20, 36, 8, 2, '#7a8296');
+  // cojín romboidal
+  for (let row = 0; row < 14; row++) {
+    const t = row < 7 ? row + 1 : 14 - row;
+    rect(ctx, 20 - t * 2, 8 + row, t * 4, 1, row < 7 ? '#5a7ae0' : '#3b5bdb');
+  }
+  rect(ctx, 6, 15, 28, 4, '#2a46b0');
+  return done(canvas, ctx);
+}
+
+/** Respaldo del asiento: va delante de la persona sentada (lado de la cámara). */
+export function waitSeatBack(): PropArt {
+  const { canvas, ctx } = makeCanvas(40, 44);
+  for (let u = 0; u < 30; u++) {
+    const y = 6 + Math.floor(u / 2);
+    rect(ctx, 5 + u, y, 1, 20, u < 2 ? '#5a7ae0' : '#3b5bdb');
+    rect(ctx, 5 + u, y, 1, 2, '#7a96f0');
+  }
+  rect(ctx, 6, 22, 2, 18, '#9aa4b8');
+  rect(ctx, 32, 34, 2, 8, '#9aa4b8');
+  return done(canvas, ctx);
+}
+
+/** Expositor de formularios. */
+export function formRack(): PropArt {
+  const { canvas, ctx } = makeCanvas(40, 86);
+  groundShadow(ctx, 20, 82, 14, 4);
+  rect(ctx, 6, 14, 28, 66, '#7a8296');
+  rect(ctx, 6, 14, 28, 2, '#c9cfdc');
+  rect(ctx, 8, 2, 24, 12, '#22356b');
+  pixelText(ctx, 'FORM', 12, 5, '#ffffff');
+  const papers = ['#ffffff', '#ffe9a8', '#d8ecff', '#ffd0d8'];
+  for (let i = 0; i < 4; i++) {
+    const y = 20 + i * 15;
+    rect(ctx, 9, y, 22, 11, papers[i]);
+    rect(ctx, 9, y, 22, 2, '#e6e1ea');
+    for (let l = 0; l < 3; l++) rect(ctx, 12, y + 4 + l * 2, 14, 1, '#9aa4b8');
+    rect(ctx, 8, y + 11, 24, 3, '#5a6278');
+  }
+  return done(canvas, ctx);
+}
+
+/** Atril para rellenar formularios de pie. */
+export function pult(): PropArt {
+  const { canvas, ctx } = makeCanvas(44, 64);
+  groundShadow(ctx, 22, 60, 14, 4);
+  rect(ctx, 19, 24, 6, 36, '#7a8296');
+  rect(ctx, 19, 24, 2, 36, '#c9cfdc');
+  fillEllipse(ctx, 22, 60, 12, 3, '#5a6278');
+  for (let u = 0; u < 38; u++) rect(ctx, 3 + u, 10 + Math.floor(u / 3), 1, 10, u < 2 ? PAL.woodLight : PAL.wood);
+  rect(ctx, 12, 12, 14, 9, '#ffffff');
+  rect(ctx, 28, 15, 8, 2, '#22356b'); // bolígrafo
+  return done(canvas, ctx);
+}
+
+export function waterCooler(): PropArt {
+  const { canvas, ctx } = makeCanvas(28, 66);
+  groundShadow(ctx, 14, 62, 10, 3);
+  rect(ctx, 5, 26, 18, 36, '#e6e9f0');
+  rect(ctx, 5, 26, 4, 36, '#ffffff');
+  rect(ctx, 19, 26, 4, 36, '#b9c2cc');
+  rect(ctx, 11, 36, 6, 4, '#5fa8ff');
+  fillEllipse(ctx, 14, 14, 9, 12, '#8fd0ff');
+  fillEllipse(ctx, 11, 10, 3, 5, '#d8f0ff');
+  rect(ctx, 10, 24, 8, 3, '#5fa8ff');
+  return done(canvas, ctx);
+}
+
+export function monitor(): PropArt {
+  const { canvas, ctx } = makeCanvas(34, 34);
+  rect(ctx, 3, 2, 28, 20, '#2a2238');
+  rect(ctx, 5, 4, 24, 16, '#5fa8ff');
+  rect(ctx, 5, 4, 24, 4, '#a8d4ff');
+  rect(ctx, 8, 11, 14, 2, '#d8ecff');
+  rect(ctx, 8, 15, 10, 2, '#d8ecff');
+  rect(ctx, 15, 22, 4, 6, '#5a5266');
+  rect(ctx, 9, 28, 16, 3, '#5a5266');
+  return done(canvas, ctx, [{ x: 0, y: -20, color: PAL.neonBlue, r: 22 }]);
+}
+
+/** Flecha de objetivo que flota sobre el destino. */
+export function marker(): HTMLCanvasElement {
+  const { canvas, ctx } = makeCanvas(32, 40);
+  for (let y = 0; y < 14; y++) rect(ctx, 10, 2 + y, 12, 1, y < 2 ? '#fff4c8' : '#ffd23a');
+  for (let y = 0; y < 18; y++) {
+    const w = 28 - y * 1.55;
+    rect(ctx, 16 - w / 2, 16 + y, w, 1, y < 2 ? '#fff4c8' : '#ffc21a');
+  }
+  rect(ctx, 11, 3, 3, 12, '#fffbe8');
+  outline(ctx, 32, 40, PAL.outline);
+  return canvas;
+}

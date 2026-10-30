@@ -33,6 +33,7 @@ function doorPos(b: PlacedBuilding) {
 export class StreetScene extends WorldScene {
   readonly displayName = 'Kreuzberg';
   private brains: Brain[] = [];
+  private anna: Actor | null = null;
 
   constructor() {
     super('Street');
@@ -52,8 +53,15 @@ export class StreetScene extends WorldScene {
     this.spawnNpcs();
 
     const bar = BUILDINGS[2];
+    const amt = BUILDINGS[1];
     const start = this.safeStart(
-      data?.from === 'Bar' ? { x: doorPos(bar).x, y: doorPos(bar).y + 0.3 } : data?.x !== undefined ? { x: data.x, y: data.y! } : null,
+      data?.from === 'Bar'
+        ? { x: doorPos(bar).x, y: doorPos(bar).y + 0.3 }
+        : data?.from === 'Amt'
+          ? { x: doorPos(amt).x, y: doorPos(amt).y + 0.3 }
+          : data?.x !== undefined
+            ? { x: data.x, y: data.y! }
+            : null,
       { x: 9, y: 7 },
     );
     this.player = this.addActor(new Actor(this, 'player', GameState.data.name, start.x, start.y));
@@ -63,7 +71,12 @@ export class StreetScene extends WorldScene {
     const br = toScreen(MAP_W, 0);
     this.cameras.main.setBounds(tl.x - 64, -260, br.x - tl.x + 128, toScreen(MAP_W, MAP_H).y + 300);
 
-    this.objectivePoi = () => (GameState.data.quest.step === 'done' ? null : doorPos(BUILDINGS[2]));
+    this.objectivePoi = () => {
+      const q = GameState.data.quest;
+      if (q.id === 'shift') return doorPos(BUILDINGS[2]);
+      if (q.id === 'anmeldung') return q.step === 'get_wgb' && this.anna ? this.anna.pos : doorPos(BUILDINGS[1]);
+      return null;
+    };
     this.time.addEvent({ delay: 2000, loop: true, callback: () => this.savePosition() });
     this.events.once('shutdown', () => this.savePosition());
   }
@@ -101,7 +114,14 @@ export class StreetScene extends WorldScene {
     const sp = { x: 1.5, y: home.wy + 0.5 };
     this.interactables.push({ x: sp.x, y: sp.y, radius: 1.2, label: () => 'Mirar el Späti', action: () => this.ui.openDialog('spaeti') });
     const ad = doorPos(amt);
-    this.interactables.push({ x: ad.x, y: ad.y, radius: 1.3, label: () => 'Entrar al Bürgeramt', action: () => this.ui.openDialog('buergeramt_door') });
+    // el Bürgeramt abre cuando Mehmet encarga la Anmeldung (al terminar la Misión 01)
+    this.interactables.push({
+      x: ad.x,
+      y: ad.y,
+      radius: 1.3,
+      label: () => (GameState.isDone('shift') ? 'Entrar al Bürgeramt' : 'Bürgeramt (cerrado hoy)'),
+      action: () => (GameState.isDone('shift') ? this.goTo('Amt', { from: 'Street' }) : this.ui.openDialog('buergeramt_door')),
+    });
     const bd = doorPos(barB);
     this.interactables.push({ x: bd.x, y: bd.y, radius: 1.3, label: () => 'Entrar al bar', action: () => this.goTo('Bar', { from: 'Street' }) });
     const cd = doorPos(clubB);
@@ -267,7 +287,7 @@ export class StreetScene extends WorldScene {
   // ───────────── NPCs ─────────────
 
   private spawnNpcs() {
-    const npc = (key: string, name: string, x: number, y: number, dialog: () => string) => {
+    const npc = (key: string, name: string, x: number, y: number, dialog: () => string, onAction?: (a: string) => void) => {
       const a = this.addActor(new Actor(this, key, name, x, y));
       a.speed = 1.6;
       this.interactables.push({
@@ -281,13 +301,26 @@ export class StreetScene extends WorldScene {
         label: () => (a.visible ? `Hablar con ${name}` : null),
         action: () => {
           a.face(this.player.pos);
-          this.ui.openDialog(dialog(), a);
+          this.ui.openDialog(dialog(), a, onAction);
         },
       });
       return a;
     };
 
-    const anna = npc('anna', 'Anna', 2.5, 5.3, () => (GameState.data.quest.step === 'go_bar' ? 'anna_new' : 'anna'));
+    const anna = npc(
+      'anna',
+      'Anna',
+      2.5,
+      5.3,
+      () => (GameState.isActive('anmeldung', 'get_wgb') ? 'anna_wgb' : GameState.isActive('shift', 'go_bar') ? 'anna_new' : 'anna'),
+      (a) => {
+        if (a !== 'give_wgb' || !GameState.isActive('anmeldung', 'get_wgb')) return;
+        GameState.addItem('wgb');
+        GameState.setQuest('go_amt');
+        this.ui.toast({ title: 'Has recibido: die Wohnungsgeberbestätigung', lines: ['Llévala al Bürgeramt (edificio beige con bandera).'], tone: 'acid' });
+      },
+    );
+    this.anna = anna;
     const home = doorPos(BUILDINGS[0]);
     this.brains.push(
       new PatrolBrain(this, anna, [
