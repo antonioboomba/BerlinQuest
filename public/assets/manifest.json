@@ -9,7 +9,8 @@
     "bike_green_cargo": { "file": "props/bike_green_cargo.png", "enabled": true, "anchor": [29, 44], "shadow": { "w": 48, "h": 10, "angle": -14 } },
     "bike_red_locked": { "file": "props/bike_red_locked.png", "enabled": true, "anchor": [24, 43], "shadow": { "w": 42, "h": 10, "angle": -20 } },
     "lamp_berlin": { "file": "props/lamp_berlin.png", "enabled": true, "anchor": [15, 129], "shadow": { "w": 18, "h": 6 }, "glow": { "x": 0, "y": -98, "r": 64, "color": "#ff8424" } },
-    "bench_berlin": { "file": "props/bench_berlin.png", "enabled": true, "anchor": [41, 49], "shadow": { "w": 66, "h": 14, "angle": 26 } }
+    "bench_berlin": { "file": "props/bench_berlin.png", "enabled": true, "anchor": [41, 49], "shadow": { "w": 66, "h": 14, "angle": 26 } },
+    "planter_berlin": { "file": "props/planter_berlin.png", "enabled": true, "anchor": [30, 54], "shadow": { "w": 50, "h": 12, "angle": 26 } }
   },
   "ground": {
     "sidewalk_ref": { "file": "ground/sidewalk_ref.png", "enabled": true, "x0": 0 },

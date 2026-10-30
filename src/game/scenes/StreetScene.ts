@@ -231,8 +231,8 @@ export class StreetScene extends WorldScene {
     this.placeProp(this.propKey('bike_turquoise', 'bike_red'), 1.6, 4.75, { block: [0.9, 0.4] });
     this.placeProp(this.propKey('bike_black_basket', 'bike_blue'), 2.5, 4.75, { block: [0.9, 0.4] });
     this.placeProp('bin', 5.6, 4.6, { block: 0.4 });
-    this.placeProp('planter0', 6.6, 4.55, { block: 0.5 });
-    this.placeProp('planter1', 9.4, 4.55, { block: 0.5 });
+    this.placeProp(this.propKey('planter_berlin', 'planter0'), 6.6, 4.55, { block: this.registry.get('prop:planter_berlin') ? [1.2, 0.4] : 0.5 });
+    this.placeProp(this.propKey('planter_berlin', 'planter1'), 9.4, 4.55, { block: this.registry.get('prop:planter_berlin') ? [1.2, 0.4] : 0.5 });
     this.placeProp('terrace_table', 12.9, 4.75, { block: 0.6 });
     this.placeProp('chair', 13.5, 4.85);
     this.placeProp('terrace_table', 16.4, 4.75, { block: 0.6 });
