@@ -27,11 +27,48 @@ const fromRef = (x, y) => {
   return [Math.round(((x - XA) / (XB - XA)) * W), Math.round(((y - top) / (bot - top)) * HI)];
 };
 
+// El toldo sobresale de la pared, así que su borde inferior no sigue la pendiente de la fachada. Se mide ese borde
+// en cada columna (última fila roja o crema entre v 50 y 112), se ajusta una recta por tramo (a la izquierda y a la
+// derecha de la puerta) y las filas se redistribuyen para que quede horizontal en AWN: 52 px sobre el suelo, la
+// altura de la puerta del Bürgeramt (las filas de arriba, hasta las ventanas, no se tocan).
+const AWN = H - 52, FIX = 42;
+const isAwning = (c) => (c[0] > 130 && c[1] < 75 && c[2] < 85) || (c[0] > 190 && c[1] > 170 && c[2] > 150 && c[0] - c[2] < 70);
+const edge = [];
+for (let u = 0; u < W; u++) {
+  let last = -1;
+  for (let v = 50; v < 112; v++) {
+    const [x, y] = toRef(u + 0.5, v + 0.5);
+    if (isAwning(P.get(ref, Math.round(x), Math.round(y)))) last = v;
+  }
+  edge.push(last);
+}
+const fit = (u0, u1) => {
+  const pts = [];
+  for (let u = u0; u < u1; u++) if (edge[u] > 60) pts.push([u, edge[u]]);
+  const med = pts.map((p) => p[1]).sort((a, b) => a - b)[Math.floor(pts.length / 2)];
+  const ok = pts.filter((p) => Math.abs(p[1] - med) < 8);
+  const n = ok.length, sx = ok.reduce((a, p) => a + p[0], 0), sy = ok.reduce((a, p) => a + p[1], 0);
+  const sxx = ok.reduce((a, p) => a + p[0] * p[0], 0), sxy = ok.reduce((a, p) => a + p[0] * p[1], 0);
+  const k = (n * sxy - sx * sy) / (n * sxx - sx * sx);
+  return (u) => (sy - k * sx) / n + k * u;
+};
+const DOOR_U = fromRef(515, 700)[0];
+const leftLine = fit(0, DOOR_U - 10), rightLine = fit(DOOR_U + 10, W);
+const awningBottom = (u) => (u < DOOR_U ? leftLine(u) : rightLine(u));
+/** fila de la referencia rectificada para la fila v de la textura final */
+const remap = (u, v) => {
+  const b = awningBottom(u);
+  if (v <= FIX) return v;
+  if (v <= AWN) return FIX + ((v - FIX) * (b - FIX)) / (AWN - FIX);
+  return b + ((v - AWN) * (HI - b)) / (HI - AWN);
+};
+console.error(JSON.stringify({ borde_izq: [leftLine(0), leftLine(DOOR_U)].map(Math.round), borde_der: [rightLine(DOOR_U), rightLine(W)].map(Math.round), destino: AWN }));
+
 const raw = [];
 for (let v = 0; v < HI; v++) for (let u = 0; u < W; u++) {
   let r = 0, g = 0, b = 0, n = 0;
   for (let j = 0; j < 4; j++) for (let i = 0; i < 4; i++) {
-    const [x, y] = toRef(u + (i + 0.5) / 4, v + (j + 0.5) / 4);
+    const [x, y] = toRef(u + (i + 0.5) / 4, remap(u + (i + 0.5) / 4, v + (j + 0.5) / 4));
     const c = P.get(ref, Math.round(x), Math.round(y));
     r += c[0]; g += c[1]; b += c[2]; n++;
   }
@@ -72,5 +109,6 @@ const LIGHTS = [
   { at: [440, 220], color: '#ffcf6a', r: 24, alpha: 0.35 }, // ventanas iluminadas de arriba
   { at: [765, 300], color: '#ffcf6a', r: 24, alpha: 0.35 },
 ];
-const lights = LIGHTS.map((l) => { const [x, y] = fromRef(...l.at); return { x, y, color: l.color, r: l.r, alpha: l.alpha }; }).filter((l) => l.x >= 0 && l.x < W && l.y >= 0);
+const unmap = (u, vs) => { let best = 0, bd = 1e9; for (let v = 0; v < HI; v += 0.5) { const d = Math.abs(remap(u, v) - vs); if (d < bd) { bd = d; best = v; } } return Math.round(best); };
+const lights = LIGHTS.map((l) => { const [x, y0] = fromRef(...l.at); const y = unmap(x, y0); return { x, y, color: l.color, r: l.r, alpha: l.alpha }; }).filter((l) => l.x >= 0 && l.x < W && l.y >= 0);
 console.log(JSON.stringify({ size: [W, H], door_px: fromRef(515, 760)[0], lights }));
