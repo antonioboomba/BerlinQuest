@@ -61,7 +61,7 @@ export class StreetScene extends WorldScene {
     this.buildBuildings();
     this.buildStreetFurniture();
     this.buildUbahn(3, 10);
-    this.buildCurrywurst(16.6, 12.05);
+    this.buildCurrywurst(12.45, 10.7); // entre la papelera y el cartel KREUZBERG, pegado a los pilotes
     this.buildCanal();
     this.spawnNpcs();
 
