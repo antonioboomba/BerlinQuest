@@ -1,15 +1,16 @@
 import Phaser from 'phaser';
-import { CHARACTERS, FOOT_PAD, FRAME_H, FRAME_W, HAND } from '../game/art/characters';
+import { FOOT_PAD, FRAME_H, FRAME_W, HAND } from '../game/art/characters';
 import { drinkIcon } from '../game/art/props';
 import { tileCanvas } from '../game/art/tiles';
-import { addProceduralSheet, registerCharacterAnims, SHEET_H, SHEET_W } from '../game/art/sprites';
+import { registerCharacterAnims } from '../game/art/sprites';
 import { facingFromWorld, HALF_H, HALF_W, screenDirToWorld, toScreen, type Facing } from '../game/iso';
+import { initLab, loadDefault } from './lab';
 
-// Entorno independiente para revisar hojas de personaje antes de integrarlas en el juego.
+// Laboratorio independiente para preparar y revisar hojas de personaje antes de integrarlas en el juego.
 // No usa partidas, misiones ni escenas del juego: solo los mismos formatos y animaciones.
+// lab.ts monta la hoja (20 espacios); esta escena la anima en las 4 direcciones y en un paseo.
 
 const KEY = 'test_sprite';
-const PNG_URL = 'assets/characters/player.png';
 const ANIMS = ['idle', 'walk', 'carryIdle', 'carryWalk', 'sit'] as const;
 type AnimName = (typeof ANIMS)[number];
 const DIRS: { facing: Facing; label: string }[] = [
@@ -18,58 +19,25 @@ const DIRS: { facing: Facing; label: string }[] = [
   { facing: 'NE', label: 'NE · espalda' },
   { facing: 'NW', label: 'NW · espalda (espejo)' },
 ];
-const FOOT_Y = FRAME_H - FOOT_PAD; // 86
-const FOOT_X = FRAME_W / 2; // 24
 
 const ui = {
-  status: document.getElementById('status')!,
   anims: document.getElementById('anims')!,
   markers: document.getElementById('markers') as HTMLInputElement,
   held: document.getElementById('held') as HTMLInputElement,
-  file: document.getElementById('file') as HTMLInputElement,
-  reload: document.getElementById('reload')!,
-  drop: document.getElementById('drop')!,
 };
-
-function setStatus(text: string, kind: 'ok' | 'warn' | 'err') {
-  ui.status.textContent = text;
-  ui.status.className = kind;
-}
-
-/** Comprueba que la URL devuelve de verdad un PNG (el servidor de desarrollo responde HTML si falta). */
-async function fetchPng(url: string): Promise<HTMLImageElement | null> {
-  try {
-    const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok || !(res.headers.get('content-type') ?? '').includes('image/png')) return null;
-    const blob = await res.blob();
-    return await loadImage(URL.createObjectURL(blob));
-  } catch {
-    return null;
-  }
-}
-
-function loadImage(src: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = src;
-  });
-}
 
 class SpriteTestScene extends Phaser.Scene {
   private anim: AnimName = 'walk';
   private previews: { sprite: Phaser.GameObjects.Sprite; held: Phaser.GameObjects.Image; facing: Facing; foot: { x: number; y: number } }[] = [];
-  private strip: Phaser.GameObjects.Image[] = [];
   /** objetos que se rehacen al cambiar de hoja */
   private extras: Phaser.GameObjects.GameObject[] = [];
   private overlay!: Phaser.GameObjects.Graphics;
-  private walker!: Phaser.GameObjects.Sprite;
+  private walker?: Phaser.GameObjects.Sprite;
   private walkerHeld!: Phaser.GameObjects.Image;
   private walkerPos = { x: 2.5, y: 2.5 };
   private walkerFacing: Facing = 'SE';
   private keys!: Record<string, Phaser.Input.Keyboard.Key>;
-  private sandbox = { ox: 1240, oy: 250, scale: 1.5, size: 5 };
+  private sandbox = { ox: 1240, oy: 150, scale: 1.5, size: 5 };
 
   constructor() {
     super('SpriteTest');
@@ -84,111 +52,44 @@ class SpriteTestScene extends Phaser.Scene {
     sc.ellipse(20, 7, 18, 6, 0, 0, Math.PI * 2);
     sc.fill();
     shadow.refresh();
-    this.keys = this.input.keyboard!.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT') as Record<string, Phaser.Input.Keyboard.Key>;
+    this.keys = this.input.keyboard!.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT', false) as Record<string, Phaser.Input.Keyboard.Key>;
     this.overlay = this.add.graphics().setDepth(10);
-    this.buildLabels();
+    const t = (x: number, y: number, s: string) => this.add.text(x, y, s, { fontFamily: 'Segoe UI, sans-serif', fontSize: '14px', color: '#ffd77a' });
+    t(20, 8, 'ANIMACIÓN EN LAS 4 DIRECCIONES');
+    t(this.sandbox.ox - 230, 8, 'PASEO (WASD / flechas)');
     this.buildSandboxFloor();
     this.buildAnimButtons();
-    ui.markers.onchange = () => this.drawOverlay();
+    ui.markers.addEventListener('change', () => this.drawOverlay());
     ui.held.onchange = () => this.refreshAnims();
-    ui.reload.onclick = () => void this.loadDefault();
-    ui.file.onchange = () => ui.file.files?.[0] && void this.loadFile(ui.file.files[0]);
-    window.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      ui.drop.style.display = 'flex';
-    });
-    window.addEventListener('dragleave', () => (ui.drop.style.display = 'none'));
-    window.addEventListener('drop', (e) => {
-      e.preventDefault();
-      ui.drop.style.display = 'none';
-      const f = e.dataTransfer?.files?.[0];
-      if (f) void this.loadFile(f);
-    });
-    void this.loadDefault();
+    initLab((sheet) => this.setSheet(sheet));
+    void loadDefault();
   }
 
-  // ───────────── Carga de la hoja ─────────────
-
-  private async loadDefault() {
-    const img = await fetchPng(PNG_URL);
-    if (img) this.useImage(img, `public/${PNG_URL}`);
-    else {
-      this.useProcedural();
-      setStatus(`No hay ${PNG_URL} — se muestra el arte procedural actual del protagonista (respaldo).`, 'warn');
-    }
-  }
-
-  private async loadFile(f: File) {
-    try {
-      const img = await loadImage(URL.createObjectURL(f));
-      this.useImage(img, f.name);
-    } catch {
-      setStatus(`${f.name}: no se pudo leer como imagen.`, 'err');
-    }
-  }
+  // ───────────── Hoja montada → textura ─────────────
 
   private resetTexture() {
-    if (this.textures.exists(KEY)) {
-      for (const p of this.previews) p.sprite.destroy(), p.held.destroy();
-      this.walker?.destroy();
-      this.walkerHeld?.destroy();
-      this.strip.forEach((s) => s.destroy());
-      this.extras.forEach((o) => o.destroy());
-      this.extras = [];
-      this.textures.remove(KEY);
-    }
+    if (!this.textures.exists(KEY)) return;
+    for (const p of this.previews) p.sprite.destroy(), p.held.destroy();
+    this.previews = [];
+    this.walker?.destroy();
+    this.walkerHeld?.destroy();
+    this.extras.forEach((o) => o.destroy());
+    this.extras = [];
+    this.textures.remove(KEY);
   }
 
-  private useImage(img: HTMLImageElement, name: string) {
+  setSheet(sheet: HTMLCanvasElement) {
     this.resetTexture();
-    const okSize = img.width === SHEET_W && img.height === SHEET_H;
-    this.textures.addSpriteSheet(KEY, img, { frameWidth: FRAME_W, frameHeight: FRAME_H });
-    this.afterTexture();
-    if (okSize) setStatus(`✓ ${name}: ${img.width}×${img.height} px, 20 frames de ${FRAME_W}×${FRAME_H}.`, 'ok');
-    else setStatus(`✗ ${name}: mide ${img.width}×${img.height} px; se esperaba ${SHEET_W}×${SHEET_H}. El juego lo rechazaría y usaría el arte procedural.`, 'err');
-  }
-
-  private useProcedural() {
-    this.resetTexture();
-    addProceduralSheet(this.textures, KEY, CHARACTERS.player);
-    this.afterTexture();
-  }
-
-  private afterTexture() {
+    const copy = document.createElement('canvas');
+    copy.width = sheet.width;
+    copy.height = sheet.height;
+    copy.getContext('2d')!.drawImage(sheet, 0, 0);
+    const t = this.textures.addCanvas(KEY, copy)!;
+    for (let i = 0; i < 20; i++) t.add(i, 0, i * FRAME_W, 0, FRAME_W, FRAME_H);
     registerCharacterAnims(this.anims, KEY);
-    this.buildStrip();
     this.buildPreviews();
     this.buildWalker();
     this.refreshAnims();
-  }
-
-  // ───────────── Hoja completa (20 frames) ─────────────
-
-  private buildLabels() {
-    const t = (x: number, y: number, s: string, c = '#b8c4de') => this.add.text(x, y, s, { fontFamily: 'Segoe UI, sans-serif', fontSize: '14px', color: c });
-    t(20, 8, 'FRENTE · frames 0–9', '#ffd77a');
-    t(20, 228, 'ESPALDA · frames 10–19', '#ffd77a');
-    t(20, 470, 'ANIMACIÓN EN LAS 4 DIRECCIONES', '#ffd77a');
-    t(this.sandbox.ox - 230, 8, 'PASEO (WASD / flechas)', '#ffd77a');
-    const names = ['quieto', 'quieto', 'caminar', 'caminar', 'caminar', 'caminar', 'carga', 'carga camina', 'carga camina', 'sentado'];
-    for (let i = 0; i < 20; i++) {
-      const col = i % 10;
-      const row = Math.floor(i / 10);
-      t(20 + col * 98, 28 + row * 222, `${i} · ${names[col]}`, '#e8edf7').setFontSize(12);
-    }
-  }
-
-  private buildStrip() {
-    const S = 2;
-    this.strip = [];
-    for (let i = 0; i < 20; i++) {
-      const col = i % 10;
-      const row = Math.floor(i / 10);
-      const x = 20 + col * 98;
-      const y = 46 + row * 222;
-      this.strip.push(this.add.image(x, y, KEY, i).setOrigin(0, 0).setScale(S));
-    }
-    this.drawOverlay();
   }
 
   // ───────────── Vistas previas ─────────────
@@ -196,14 +97,14 @@ class SpriteTestScene extends Phaser.Scene {
   private buildPreviews() {
     const S = 3;
     this.previews = DIRS.map((d, i) => {
-      const foot = { x: 110 + i * 230, y: 800 };
+      const foot = { x: 110 + i * 230, y: 330 };
       const tile = this.add.image(foot.x, foot.y - HALF_H * S, 'tile_preview').setScale(S).setOrigin(0.5, 0);
       tile.setDepth(0);
       const sh = this.add.image(foot.x, foot.y, 'shadow').setScale(S * 0.9).setAlpha(0.6).setDepth(1);
       const sprite = this.add.sprite(foot.x, foot.y + FOOT_PAD * S, KEY, 0).setOrigin(0.5, 1).setScale(S).setDepth(2);
       sprite.setFlipX(d.facing.endsWith('W'));
       const held = this.add.image(0, 0, 'drink_bier').setOrigin(0.5, 1).setScale(S).setDepth(3);
-      const label = this.add.text(foot.x, foot.y + 56, d.label, { fontFamily: 'Segoe UI, sans-serif', fontSize: '14px', color: '#e8edf7' }).setOrigin(0.5, 0);
+      const label = this.add.text(foot.x, foot.y + 48, d.label, { fontFamily: 'Segoe UI, sans-serif', fontSize: '14px', color: '#e8edf7' }).setOrigin(0.5, 0);
       this.extras.push(tile, sh, label);
       return { sprite, held, facing: d.facing, foot };
     });
@@ -268,6 +169,7 @@ class SpriteTestScene extends Phaser.Scene {
   }
 
   private syncWalker(moving: boolean) {
+    if (!this.walker) return;
     const { ox, oy, scale } = this.sandbox;
     const s = toScreen(this.walkerPos.x, this.walkerPos.y);
     const foot = { x: ox + s.x * scale, y: oy + s.y * scale };
@@ -307,25 +209,6 @@ class SpriteTestScene extends Phaser.Scene {
     const g = this.overlay;
     g.clear();
     if (!ui.markers.checked) return;
-    const S = 2;
-    for (let i = 0; i < 20; i++) {
-      const col = i % 10;
-      const row = Math.floor(i / 10);
-      const x = 20 + col * 98;
-      const y = 46 + row * 222;
-      g.lineStyle(1, 0x4a74c9, 0.7).strokeRect(x, y, FRAME_W * S, FRAME_H * S);
-      // pies
-      g.lineStyle(2, 0xff5a6a, 1);
-      g.lineBetween(x + (FOOT_X - 4) * S, y + FOOT_Y * S, x + (FOOT_X + 4) * S, y + FOOT_Y * S);
-      g.lineBetween(x + FOOT_X * S, y + (FOOT_Y - 4) * S, x + FOOT_X * S, y + (FOOT_Y + 2) * S);
-      // mano en las poses de cargar
-      const local = i % 10;
-      if (local >= 6 && local <= 8) g.fillStyle(0x5fa8ff, 1).fillCircle(x + (FOOT_X + HAND.x) * S, y + (FOOT_Y + HAND.y) * S, 4);
-      // retrato (frame 0 y 10)
-      if (local === 0) g.lineStyle(2, 0x6dffa8, 1).strokeRect(x + 6 * S, y, 36 * S, 36 * S);
-      // altura del bocadillo (82 px sobre los pies)
-      g.lineStyle(1, 0xffd77a, 0.8).lineBetween(x, y + (FOOT_Y - 82) * S, x + FRAME_W * S, y + (FOOT_Y - 82) * S);
-    }
     for (const p of this.previews) {
       g.lineStyle(2, 0xff5a6a, 1);
       g.lineBetween(p.foot.x - 10, p.foot.y, p.foot.x + 10, p.foot.y);
@@ -334,13 +217,13 @@ class SpriteTestScene extends Phaser.Scene {
   }
 }
 
-new Phaser.Game({
+// accesible desde la consola y las pruebas automáticas
+(window as unknown as { __GAME: Phaser.Game }).__GAME = new Phaser.Game({
   type: Phaser.AUTO,
   parent: 'game',
   width: 1600,
-  height: 880,
+  height: 410,
   backgroundColor: '#1a2238',
   pixelArt: true,
-  scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_HORIZONTALLY },
   scene: [SpriteTestScene],
 });

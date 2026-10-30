@@ -3,41 +3,86 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Berlin Quest · Sprite test</title>
+    <title>Berlin Quest · Laboratorio de sprites</title>
     <style>
       html, body { margin: 0; background: #141a2e; color: #e8edf7; font: 14px/1.4 "Segoe UI", system-ui, sans-serif; }
-      #bar { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 10px 14px; background: #111a2e; border-bottom: 2px solid #4a74c9; }
-      #bar b { color: #ffd77a; }
-      #bar button { background: #18233c; color: #fff; border: 1px solid #2c4270; border-radius: 6px; padding: 5px 10px; cursor: pointer; }
-      #bar button.on { background: #24407a; border-color: #5fa8ff; }
-      #bar label { display: inline-flex; gap: 4px; align-items: center; cursor: pointer; }
-      #status { padding: 6px 14px; font-weight: 600; }
-      #status.ok { color: #6dffa8; }
-      #status.warn { color: #ffd77a; }
-      #status.err { color: #ff8a96; }
-      #drop { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: #05070dcc; font-size: 28px; color: #ffd77a; z-index: 10; }
-      #game canvas { display: block; image-rendering: pixelated; }
-      #help { padding: 4px 14px 10px; color: #b8c4de; font-size: 13px; }
+      .bar { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 10px 14px; background: #111a2e; border-bottom: 2px solid #4a74c9; }
+      .bar b { color: #ffd77a; }
+      button, .btn { background: #18233c; color: #fff; border: 1px solid #2c4270; border-radius: 6px; padding: 5px 10px; cursor: pointer; font: inherit; }
+      button.on { background: #24407a; border-color: #5fa8ff; }
+      button.primary { background: #1f6b45; border-color: #6dffa8; font-weight: 600; }
+      label { display: inline-flex; gap: 4px; align-items: center; cursor: pointer; }
+      .btn input { display: none; }
+      #status { padding: 8px 14px 2px; font-weight: 600; }
+      .ok { color: #6dffa8; }
+      .warn { color: #ffd77a; }
+      .err { color: #ff8a96; }
+      #report { margin: 2px 14px 8px; padding-left: 20px; }
+      #report li { margin: 2px 0; }
+      h2 { font-size: 14px; color: #ffd77a; margin: 14px 14px 6px; font-weight: 600; }
+      h2 small { color: #b8c4de; font-weight: 400; }
+      .scroll { overflow-x: auto; margin: 0 14px; padding-bottom: 4px; }
+      canvas { image-rendering: pixelated; display: block; }
+      #srcBox p { margin: 0 14px 6px; color: #ff8a96; }
+      #slots { display: grid; grid-template-columns: repeat(10, minmax(104px, 1fr)); gap: 8px; margin: 0 14px; }
+      .slot { background: #111a2e; border: 2px solid #2c4270; border-radius: 6px; padding: 4px; cursor: pointer; min-width: 0; }
+      .slot.sel { border-color: #5fa8ff; box-shadow: 0 0 0 2px #5fa8ff55; }
+      .slot.warn { border-color: #ffd77a; }
+      .slot.err { border-color: #ff5a6a; }
+      .slot.over { background: #24407a; }
+      .slot.empty canvas { opacity: 0.55; }
+      .slot .head { font-size: 11px; color: #b8c4de; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .slot canvas { width: 96px; height: 176px; margin: 3px auto; outline: 1px solid #5fa8ff; cursor: grab; }
+      .slot .name { font-size: 10px; color: #8392b3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .slot .tools { display: flex; flex-wrap: wrap; gap: 2px; margin: 3px 0; }
+      .slot .tools button { padding: 1px 4px; font-size: 11px; }
+      .slot .msg { font-size: 10.5px; line-height: 1.25; }
+      .slot .msg span { display: block; margin-top: 2px; }
+      #drop { position: fixed; inset: 0; display: none; align-items: flex-start; justify-content: center; padding-top: 40px; background: #05070d66; font-size: 22px; color: #ffd77a; z-index: 10; pointer-events: none; }
+      #game canvas { display: block; }
+      .help { padding: 2px 14px 6px; color: #b8c4de; font-size: 13px; }
     </style>
   </head>
   <body>
-    <div id="bar">
-      <b>Sprite test</b>
-      <span>Animación:</span>
-      <span id="anims"></span>
-      <label><input type="checkbox" id="markers" checked /> Marcadores</label>
-      <label><input type="checkbox" id="held" /> Objeto en la mano</label>
-      <label>Archivo: <input type="file" id="file" accept="image/png" /></label>
+    <div class="bar">
+      <b>Laboratorio de sprites</b>
+      <label class="btn">Cargar hoja 960×88<input type="file" id="file" accept="image/png" /></label>
+      <label class="btn">Cargar fotogramas sueltos<input type="file" id="frames" accept="image/png" multiple /></label>
+      <button id="procedural">Base: arte procedural</button>
       <button id="reload">Recargar player.png</button>
+      <button id="clear">Vaciar los 20 espacios</button>
+      <label><input type="checkbox" id="align" checked /> Alinear pies (y 85) al cargar</label>
+      <label><input type="checkbox" id="markers" checked /> Marcadores</label>
+      <button id="export" class="primary">Exportar player.png</button>
     </div>
     <div id="status">Cargando…</div>
-    <div id="help">
-      Marcadores: <span style="color:#ff5a6a">✚ pies (x 24, y 86)</span> · <span style="color:#5fa8ff">● mano (43, 46)</span> ·
-      <span style="color:#6dffa8">▭ zona del retrato (6, 0, 36×36)</span> · <span style="color:#ffd77a">— altura del bocadillo</span>.
-      Paseo (derecha): WASD o flechas. También puedes arrastrar un PNG a la página.
+    <ul id="report"></ul>
+
+    <h2>Hoja final <small>· 960×88, 20 celdas de 48×88 (esto es lo que se exporta) · rojo = error, amarillo = aviso</small></h2>
+    <div class="scroll"><canvas id="sheetView"></canvas></div>
+
+    <div id="srcBox" hidden>
+      <h2>Imagen cargada sin el formato correcto</h2>
+      <p id="srcInfo"></p>
+      <div class="scroll"><canvas id="srcView"></canvas></div>
+    </div>
+
+    <h2>Montaje · 20 espacios <small>· clic = seleccionar el espacio inicial · arrastra un espacio sobre otro para intercambiarlos · suelta PNG sobre un espacio para cargarlos desde ahí</small></h2>
+    <div class="help">
+      Los fotogramas sueltos (máx. 48×88) se colocan sin escalar: suelas en y = 85, lienzo centrado en x = 24. Varios archivos se ordenan por nombre (frame2 antes que frame10).
+      Marcadores: <span style="color:#ff5a6a">✚ pies (24, 86)</span> · <span style="color:#5fa8ff">● mano</span> · <span style="color:#6dffa8">▭ retrato</span> · <span style="color:#ffd77a">— bocadillo</span>.
+    </div>
+    <div id="slots"></div>
+
+    <h2>Vista previa animada <small>· de la hoja montada, antes de exportar</small></h2>
+    <div class="bar" style="border: 0; background: none; padding-top: 0">
+      <span>Animación:</span>
+      <span id="anims"></span>
+      <label><input type="checkbox" id="held" /> Objeto en la mano</label>
+      <span class="help" style="padding: 0">Paseo (derecha): WASD o flechas.</span>
     </div>
     <div id="game"></div>
-    <div id="drop">Suelta el PNG aquí</div>
+    <div id="drop">Suelta el PNG: hoja de 960×88 o fotogramas sueltos (desde el espacio seleccionado)</div>
     <script type="module" src="/src/sprite-test/main.ts"></script>
   </body>
 </html>

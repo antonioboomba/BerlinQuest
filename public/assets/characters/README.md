@@ -26,12 +26,22 @@ public/assets/characters/player.png
 - **Mano** (objetos en poses de cargar): ≈ (43, 46).
 - **Cabeza** dentro de x 6–42, y 0–36 (se recorta para el retrato del HUD).
 
-## Probar antes de usarlo en el juego
+## Laboratorio: probar, montar y exportar
 
-1. Copia el PNG aquí como `player.png`.
-2. Arranca `npm run dev` y abre http://localhost:5173/sprite-test.html
-   (también puedes arrastrar un PNG a esa página sin copiarlo).
-3. Revisa frames, direcciones, pies, mano y paseo.
+Arranca `npm run dev` y abre http://localhost:5173/sprite-test.html
+
+- **Hoja completa** (960×88): «Cargar hoja» o arrastrarla. El análisis marca en rojo los frames
+  sospechosos aunque el tamaño sea correcto: figura que cruza el límite entre frames, frames casi
+  llenos (trozo ampliado de una ilustración), sin fondo transparente, pies fuera de y 85–86 o
+  descentrados, demasiados colores o bordes suavizados (imagen reescalada), alturas incoherentes.
+- **Imagen de otro tamaño**: se muestra tal cual con la rejilla de 48×88, pero **no se recorta ni se escala**.
+- **Fotogramas sueltos** (cada uno de 48×88 como máximo): «Cargar fotogramas sueltos» o soltarlos sobre
+  un espacio. Varios archivos se ordenan por nombre (`frame2` antes que `frame10`) y se colocan desde el
+  espacio seleccionado. Sin escalar: suelas en y = 85 y lienzo centrado en x = 24. Un dibujo mayor de
+  48×88 se rechaza.
+- **Organizar**: arrastra un espacio sobre otro para intercambiarlos; ◀ ▶ ▲ ▼ mueven 1 px; ✕ vacía.
+- **Vista previa**: las animaciones en 4 direcciones y el paseo usan la hoja montada en ese momento.
+- **Exportar player.png**: descarga la hoja de 960×88 con fondo transparente. Cópiala aquí como `player.png`.
 
 ## Activarlo en el juego (solo cuando esté aprobado)
 
