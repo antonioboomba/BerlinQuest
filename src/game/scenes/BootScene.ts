@@ -77,6 +77,8 @@ export class BootScene extends Phaser.Scene {
         tex.remove(key);
       } else {
         this.registry.set(`prop:${key}`, info);
+        // halo opcional: usa el mismo sistema de luces que los objetos procedurales
+        if (entry.glow) this.registry.set(`lights:${key}`, [{ x: entry.glow.x, y: entry.glow.y, r: entry.glow.r, color: entry.glow.color ?? PAL.lampGlow }]);
         console.info(`[sprites] ${key}: usando PNG externo.`);
       }
     }

@@ -48,6 +48,8 @@ export interface PropEntry {
   anchor: [number, number];
   /** sombra del juego bajo el objeto, centrada en el anclaje (px; ángulo en grados) */
   shadow?: { w: number; h: number; angle?: number };
+  /** halo de luz opcional (p. ej. el farol): posición relativa al anclaje, radio y color */
+  glow?: { x: number; y: number; r: number; color?: string };
 }
 
 /** Datos ya validados de un objeto externo cargado (se guardan en el registro como `prop:<clave>`). */

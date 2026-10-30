@@ -1,5 +1,5 @@
 {
-  "_comment": "Sprites externos de Berlin Quest. Un personaje solo se usa en el juego cuando su entrada tiene enabled: true. Si el PNG falta o no mide 960x88, el juego usa el arte procedural. La pagina sprite-test.html carga el PNG aunque enabled sea false. hand (opcional): centro de la base del objeto que lleva en la mano, en pixeles del frame de 48x88 [x, y], de frente y de espaldas. props: objetos de la ciudad en pixel art a escala 1 (max 160x160); anchor = punto del PNG que se apoya en el suelo, shadow = sombra del juego bajo el objeto. Desactivados o invalidos, se usa el objeto procedural.",
+  "_comment": "Sprites externos de Berlin Quest. Un personaje solo se usa en el juego cuando su entrada tiene enabled: true. Si el PNG falta o no mide 960x88, el juego usa el arte procedural. La pagina sprite-test.html carga el PNG aunque enabled sea false. hand (opcional): centro de la base del objeto que lleva en la mano, en pixeles del frame de 48x88 [x, y], de frente y de espaldas. props: objetos de la ciudad en pixel art a escala 1 (max 160x160); anchor = punto del PNG que se apoya en el suelo, shadow = sombra del juego bajo el objeto, glow = halo opcional del farol (quitarlo lo desactiva). Desactivados o invalidos, se usa el objeto procedural.",
   "characters": {
     "player": { "file": "characters/player.png", "enabled": true, "hand": { "front": [31, 62], "back": [39, 56] } }
   },
@@ -7,6 +7,7 @@
     "bike_black_basket": { "file": "props/bike_black_basket.png", "enabled": true, "anchor": [25, 48], "shadow": { "w": 44, "h": 10, "angle": -14 } },
     "bike_turquoise": { "file": "props/bike_turquoise.png", "enabled": true, "anchor": [24, 48], "shadow": { "w": 42, "h": 10, "angle": -21 } },
     "bike_green_cargo": { "file": "props/bike_green_cargo.png", "enabled": true, "anchor": [29, 44], "shadow": { "w": 48, "h": 10, "angle": -14 } },
-    "bike_red_locked": { "file": "props/bike_red_locked.png", "enabled": true, "anchor": [24, 43], "shadow": { "w": 42, "h": 10, "angle": -20 } }
+    "bike_red_locked": { "file": "props/bike_red_locked.png", "enabled": true, "anchor": [24, 43], "shadow": { "w": 42, "h": 10, "angle": -20 } },
+    "lamp_berlin": { "file": "props/lamp_berlin.png", "enabled": true, "anchor": [15, 129], "shadow": { "w": 18, "h": 6 }, "glow": { "x": 0, "y": -98, "r": 64 } }
   }
 }

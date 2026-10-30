@@ -161,13 +161,16 @@ export class StreetScene extends WorldScene {
   }
 
   private buildStreetFurniture() {
-    for (const x of [3, 9, 15, 21]) {
-      this.placeProp('lamp', x, 5.75, { block: 0.3 });
+    // farolas berlinesas (PNG externo; sin él, la procedural). Sin farolas delante del Späti,
+    // el Bürgeramt y el bar: solo la del club en la acera norte y las dos de la plaza.
+    const lamp = this.propKey('lamp_berlin', 'lamp');
+    for (const x of [21]) {
+      this.placeProp(lamp, x, 5.75, { block: 0.3 });
       const s = toScreen(x, 5.75);
       this.addGlow(s.x, s.y, PAL.lampGlow, 110, 0.28, -90000);
     }
     for (const x of [7, 19]) {
-      this.placeProp('lamp', x, 9.25, { block: 0.3 });
+      this.placeProp(lamp, x, 9.25, { block: 0.3 });
       const s = toScreen(x, 9.25);
       this.addGlow(s.x, s.y, PAL.lampGlow, 110, 0.28, -90000);
     }
