@@ -1,7 +1,7 @@
 // Cadena de misiones del juego Phaser. Cada misión define sus pasos (con el objetivo que ve el
 // jugador) y su recompensa. Al completarse una misión empieza automáticamente la siguiente.
 
-export type QuestId = 'shift' | 'anmeldung' | 'wg';
+export type QuestId = 'shift' | 'anmeldung' | 'wg' | 'unterwegs';
 
 export interface QuestStepDef {
   id: string;
@@ -72,6 +72,24 @@ export const QUESTS: QuestDef[] = [
       { id: 'putzplan', label: 'Apúntate en el Putzplan', objective: 'Apúntate en el Putzplan (en la nevera).', icon: '📋' },
     ],
     reward: { xp: 100, money: 0 },
+  },
+  {
+    id: 'unterwegs',
+    code: 'Mission 04',
+    title: 'Unterwegs in Berlin',
+    outro: 'Ya sabes moverte en U-Bahn: Alexanderplatz queda desbloqueado.',
+    steps: [
+      { id: 'invite', label: 'Habla con Emre en la WG', objective: 'Emre quiere enseñarte la ciudad: habla con él en la WG.', icon: '🗺️' },
+      { id: 'station', label: 'Baja a la estación Moritzplatz', objective: 'Baja a la estación de U-Bahn (las escaleras con la «U» azul).', icon: '🚇' },
+      { id: 'map', label: 'Consulta el plano de la línea', objective: 'Consulta el plano de la U8 en la pared de la estación.', icon: '🗺️' },
+      { id: 'ticket', label: 'Compra el billete adecuado', objective: 'Compra en la máquina el billete más adecuado para 3 estaciones.', icon: '🎟️' },
+      { id: 'platform', label: 'Ve al andén correcto', objective: 'Ve al andén de la U8 Richtung Wittenau y espera allí (E).', icon: '🚉' },
+      { id: 'wait', label: 'Espera el tren', objective: 'Espera el tren en el andén. Mira el indicador de llegada.', icon: '⏱️' },
+      { id: 'board', label: 'Sube al vagón', objective: '¡El tren ha llegado! Sube por una puerta abierta (E).', icon: '🚪' },
+      { id: 'ride', label: 'Bájate en Alexanderplatz', objective: 'Escucha los anuncios y bájate en Alexanderplatz (3.ª estación).', icon: '🔊' },
+      { id: 'meet', label: 'Encuentra a Emre en la Weltzeituhr', objective: 'Busca a Emre junto al reloj mundial (Weltzeituhr).', icon: '🕰️' },
+    ],
+    reward: { xp: 110, money: 0 },
   },
 ];
 

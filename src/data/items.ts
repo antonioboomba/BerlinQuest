@@ -12,6 +12,7 @@ const list: Item[] = [
   { id: 'kaffee', name: 'Café de máquina', de: 'der Kaffee', emoji: '☕', description: 'Mejor que nada.' },
   { id: 'formular_leer', name: 'Formulario en blanco', de: 'das Anmeldeformular (leer)', emoji: '📃', description: 'Hay que rellenarlo en el atril.' },
   { id: 'anmeldeformular', name: 'Formulario rellenado', de: 'das Anmeldeformular', emoji: '📝', description: 'Tus datos, listos para la funcionaria.' },
+  { id: 'fahrkarte', name: 'Billete de metro', de: 'die Fahrkarte', emoji: '🎟️', description: 'Válido para tu trayecto en U-Bahn.' },
   { id: 'anmeldebestaetigung', name: 'Certificado de empadronamiento', de: 'die Anmeldebestätigung', emoji: '📜', description: 'La prueba de que vives oficialmente en Berlín. Abre muchas puertas.' },
 ];
 

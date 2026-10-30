@@ -4,7 +4,7 @@ import { makeCanvas, rng, shade } from './pixel';
 
 // Baldosas isométricas de 64×32 con patrones limpios alineados a los ejes (u, v) de la baldosa.
 
-export type TileKind = 'cobble' | 'slab' | 'curb' | 'grass' | 'water' | 'wood' | 'tiles' | 'carpet' | 'asphaltDark' | 'lino' | 'carpetBlue';
+export type TileKind = 'cobble' | 'slab' | 'curb' | 'grass' | 'water' | 'wood' | 'tiles' | 'carpet' | 'asphaltDark' | 'lino' | 'carpetBlue' | 'trackX' | 'trackY' | 'edgeX' | 'edgeY' | 'plaza';
 
 type Painter = (u: number, v: number, r: () => number) => string | null;
 
@@ -110,6 +110,26 @@ const PAINTERS: Record<TileKind, Painter> = {
     if (fu < 0.03 || fv < 0.03) return '#b9c2cc';
     const base = (Math.floor(u * 2) + Math.floor(v * 2)) % 2 ? '#d6dde4' : '#ccd4dc';
     return r() < 0.03 ? shade(base, 0.96) : base;
+  },
+  // vías: balasto oscuro con dos raíles a lo largo de u (trackX) o de v (trackY)
+  trackX: (u, v) => {
+    if (Math.abs(v - 0.3) < 0.04 || Math.abs(v - 0.7) < 0.04) return '#c9cfdc';
+    if (frac(u * 4) < 0.12) return '#5a4a40';
+    return frac(u * 9 + v * 5) < 0.3 ? '#3a3a44' : '#2e2e38';
+  },
+  trackY: (u, v) => {
+    if (Math.abs(u - 0.3) < 0.04 || Math.abs(u - 0.7) < 0.04) return '#c9cfdc';
+    if (frac(v * 4) < 0.12) return '#5a4a40';
+    return frac(v * 9 + u * 5) < 0.3 ? '#3a3a44' : '#2e2e38';
+  },
+  // borde de andén: línea blanca y franja táctil amarilla junto a la vía
+  edgeX: (u, v) => (v < 0.12 ? '#ffffff' : v < 0.34 ? (frac(u * 8) < 0.5 ? '#f5c400' : '#e0b000') : PAL.slab),
+  edgeY: (u, v) => (u < 0.12 ? '#ffffff' : u < 0.34 ? (frac(v * 8) < 0.5 ? '#f5c400' : '#e0b000') : PAL.slab),
+  plaza: (u, v) => {
+    const fu = frac(u * 3);
+    const fv = frac(v * 3);
+    if (fu < 0.04 || fv < 0.04) return '#b0a8b8';
+    return (Math.floor(u * 3) + Math.floor(v * 3)) % 2 ? '#d8d0dc' : '#cfc6d4';
   },
   carpetBlue: (u, v) => {
     if (u < 0.03 || v < 0.03) return '#2f4a7a';

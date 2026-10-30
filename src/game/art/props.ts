@@ -679,3 +679,155 @@ export function floorLamp(): PropArt {
   for (let y = 0; y < 16; y++) rect(ctx, 7 - y / 4, 4 + y, 16 + y / 2, 1, y < 2 ? '#fff6e0' : '#f2dcb8');
   return done(canvas, ctx, [{ x: 0, y: -80, color: PAL.lampGlow, r: 60 }]);
 }
+
+// ───────────── U-Bahn y Alexanderplatz ─────────────
+
+/** Máquina de billetes de la BVG. */
+export function ticketMachine(): PropArt {
+  const { canvas, ctx } = makeCanvas(40, 90);
+  groundShadow(ctx, 20, 86, 15, 4);
+  rect(ctx, 5, 6, 30, 80, '#d8dde8');
+  rect(ctx, 5, 6, 30, 3, '#ffffff');
+  rect(ctx, 29, 6, 6, 80, '#aab2c4');
+  rect(ctx, 5, 2, 30, 8, '#f5c400');
+  pixelText(ctx, 'BVG', 13, 3, '#2a2238');
+  rect(ctx, 9, 16, 20, 16, '#2a3a6a');
+  rect(ctx, 10, 17, 18, 14, '#5fc2ff');
+  pixelText(ctx, 'TICKET', 10, 21, '#ffffff');
+  for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) rect(ctx, 11 + c * 6, 38 + r * 5, 4, 3, '#5a6278');
+  rect(ctx, 10, 58, 18, 4, '#2a2238');
+  rect(ctx, 10, 70, 18, 8, '#5a6278');
+  return done(canvas, ctx);
+}
+
+/** Plano de la línea U8 en un soporte. */
+export function netzplan(stations: string[], here: number): PropArt {
+  const W = 132;
+  const { canvas, ctx } = makeCanvas(W, 130);
+  groundShadow(ctx, W / 2, 126, 30, 4);
+  rect(ctx, W / 2 - 3, 84, 6, 42, '#5a6278');
+  rect(ctx, 4, 2, W - 8, 86, '#ffffff');
+  rect(ctx, 4, 2, W - 8, 12, '#22356b');
+  pixelText(ctx, 'U8  RICHTUNG WITTENAU', 8, 5, '#ffffff');
+  rect(ctx, 14, 20, 4, 62, '#1f4fd1');
+  stations.forEach((st, i) => {
+    const y = 76 - i * 16;
+    const isHere = i === here;
+    rect(ctx, 11, y, 10, 6, isHere ? '#e8333a' : '#ffffff');
+    rect(ctx, 12, y + 1, 8, 4, isHere ? '#ff8a8a' : '#1f4fd1');
+    pixelText(ctx, st.toUpperCase().slice(0, 25), 26, y, isHere ? '#c8283c' : '#2a2238');
+  });
+  return done(canvas, ctx);
+}
+
+/** Tren U-Bahn amarillo: cara lateral (para isoBox). */
+export function trainSide(len: number, open: boolean): HTMLCanvasElement {
+  const H = 70;
+  const { canvas, ctx } = makeCanvas(len, H);
+  rect(ctx, 0, 0, len, H, '#f5c400');
+  rect(ctx, 0, 0, len, 6, '#ffe066');
+  rect(ctx, 0, H - 10, len, 10, '#3a3346');
+  for (let x = 0; x < len; x += 64) {
+    const dx = x + 24;
+    if (open) rect(ctx, dx, 14, 18, H - 24, '#2a2238');
+    else {
+      rect(ctx, dx, 14, 18, H - 24, '#e6b000');
+      rect(ctx, dx + 8, 14, 2, H - 24, '#3a3346');
+      rect(ctx, dx + 2, 18, 5, 18, '#bfe3ff');
+      rect(ctx, dx + 11, 18, 5, 18, '#bfe3ff');
+    }
+    rect(ctx, x + 4, 16, 16, 18, '#2a3a6a');
+    rect(ctx, x + 46, 16, 16, 18, '#2a3a6a');
+    rect(ctx, x + 5, 17, 6, 4, '#8fa3d6');
+    rect(ctx, x + 47, 17, 6, 4, '#8fa3d6');
+  }
+  return canvas;
+}
+
+export function trainCab(width: number): HTMLCanvasElement {
+  const H = 70;
+  const { canvas, ctx } = makeCanvas(width, H);
+  rect(ctx, 0, 0, width, H, '#e6b000');
+  rect(ctx, 4, 12, width - 8, 20, '#2a3a6a');
+  rect(ctx, 6, 13, Math.floor(width / 3), 5, '#8fa3d6');
+  rect(ctx, 4, 40, 6, 4, '#fff6c8');
+  rect(ctx, width - 10, 40, 6, 4, '#fff6c8');
+  rect(ctx, width / 2 - 8, 4, 16, 6, '#2a2238');
+  pixelText(ctx, 'U8', width / 2 - 4, 5, '#ffd77a');
+  rect(ctx, 0, H - 10, width, 10, '#3a3346');
+  return canvas;
+}
+
+/** Reloj mundial de Alexanderplatz (columna, tambor con ciudades y modelo del sistema solar). */
+export function weltzeituhr(): PropArt {
+  const { canvas, ctx } = makeCanvas(90, 170);
+  groundShadow(ctx, 45, 164, 30, 7);
+  fillEllipse(ctx, 45, 162, 26, 7, '#8a8a9a');
+  fillEllipse(ctx, 45, 160, 24, 6, '#b8bcc8');
+  rect(ctx, 40, 90, 10, 70, '#9aa4b8');
+  rect(ctx, 40, 90, 3, 70, '#d8dde8');
+  rect(ctx, 8, 56, 74, 36, '#2a2238');
+  rect(ctx, 10, 58, 70, 32, '#e6e9f0');
+  const cities = ['BERLIN', 'MADRID', 'TOKIO', 'LIMA'];
+  cities.forEach((c, i) => pixelText(ctx, c, 12 + (i % 2) * 34, 61 + Math.floor(i / 2) * 8, '#22356b'));
+  rect(ctx, 10, 78, 70, 12, '#f0c95a');
+  for (let x = 12; x < 80; x += 6) rect(ctx, x, 80, 3, 8, '#2a2238');
+  fillEllipse(ctx, 45, 56, 37, 6, '#b8bcc8');
+  fillEllipse(ctx, 45, 92, 37, 5, '#8a8a9a');
+  rect(ctx, 44, 18, 2, 38, '#5a6278');
+  for (const [r, c] of [[18, '#c9cfdc'], [12, '#9aa4b8']] as [number, string][]) {
+    for (let a = 0; a < 40; a++) {
+      const t = (a / 40) * Math.PI * 2;
+      px(ctx, 45 + Math.cos(t) * r, 22 + Math.sin(t) * r * 0.45, c);
+    }
+  }
+  fillEllipse(ctx, 45, 22, 4, 4, '#ffd77a');
+  fillEllipse(ctx, 62, 23, 3, 3, '#5fc2ff');
+  fillEllipse(ctx, 34, 18, 2, 2, '#e8333a');
+  return done(canvas, ctx);
+}
+
+/** Fuente de varios pisos para la plaza. */
+export function fountain(): PropArt {
+  const { canvas, ctx } = makeCanvas(150, 90);
+  groundShadow(ctx, 75, 80, 70, 10);
+  fillEllipse(ctx, 75, 74, 70, 14, '#8a8a9a');
+  fillEllipse(ctx, 75, 72, 66, 12, '#4f86c6');
+  fillEllipse(ctx, 70, 70, 40, 6, '#7fb2e8');
+  rect(ctx, 70, 34, 10, 36, '#b8bcc8');
+  fillEllipse(ctx, 75, 46, 30, 7, '#c9cfdc');
+  fillEllipse(ctx, 75, 45, 26, 5, '#4f86c6');
+  fillEllipse(ctx, 75, 28, 16, 4, '#c9cfdc');
+  fillEllipse(ctx, 75, 27, 12, 3, '#7fb2e8');
+  for (let i = 0; i < 6; i++) rect(ctx, 62 + i * 5, 6 + (i % 2) * 4, 2, 20 - (i % 2) * 4, '#d8ecff');
+  return done(canvas, ctx);
+}
+
+/** Torre de televisión: decorado de fondo. */
+export function fernsehturm(): HTMLCanvasElement {
+  const { canvas, ctx } = makeCanvas(140, 520);
+  rect(ctx, 66, 0, 8, 120, '#c9cfdc');
+  for (let y = 10; y < 110; y += 18) rect(ctx, 66, y, 8, 6, '#e8333a');
+  fillEllipse(ctx, 70, 160, 46, 44, '#b8bcc8');
+  fillEllipse(ctx, 62, 150, 30, 28, '#d8dde8');
+  rect(ctx, 26, 160, 88, 8, '#5a6278');
+  for (let x = 30; x < 112; x += 8) rect(ctx, x, 161, 5, 6, '#ffd77a');
+  rect(ctx, 60, 200, 20, 320, '#d8dde8');
+  rect(ctx, 60, 200, 6, 320, '#ffffff');
+  rect(ctx, 74, 200, 6, 320, '#aab2c4');
+  return canvas;
+}
+
+/** Banco de andén (sin respaldo). */
+export function platformBench(): PropArt {
+  const { canvas, ctx } = makeCanvas(60, 36);
+  groundShadow(ctx, 30, 30, 24, 5);
+  for (let i = 0; i < 50; i++) {
+    const y = 8 + Math.floor(i / 2);
+    rect(ctx, 5 + i, y, 1, 4, '#e8333a');
+    rect(ctx, 5 + i, y, 1, 1, '#ff8a8a');
+  }
+  rect(ctx, 9, 13, 3, 14, '#5a6278');
+  rect(ctx, 49, 33 - 10, 3, 10, '#5a6278');
+  return done(canvas, ctx);
+}

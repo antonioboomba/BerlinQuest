@@ -40,7 +40,7 @@ export class BootScene extends Phaser.Scene {
     }
 
     // ── Suelos ──
-    const kinds: TileKind[] = ['cobble', 'slab', 'curb', 'grass', 'water', 'wood', 'tiles', 'carpet', 'asphaltDark', 'lino', 'carpetBlue'];
+    const kinds: TileKind[] = ['cobble', 'slab', 'curb', 'grass', 'water', 'wood', 'tiles', 'carpet', 'asphaltDark', 'lino', 'carpetBlue', 'trackX', 'trackY', 'edgeX', 'edgeY', 'plaza'];
     for (const k of kinds) for (let v = 0; v < TILE_VARIANTS; v++) tex.addCanvas(`tile_${k}_${v}`, tileCanvas(k, v));
 
     // ── Objetos ──
@@ -84,6 +84,13 @@ export class BootScene extends Phaser.Scene {
     add('putzplan', P.putzplanSheet());
     add('plate_zimmer', P.roomPlate('DEIN ZIMMER'));
     add('floor_lamp', P.floorLamp());
+    // Misión 04: U-Bahn y Alexanderplatz
+    add('ticket_machine', P.ticketMachine());
+    add('netzplan', P.netzplan(['Moritzplatz', 'Heinrich-Heine-Straße', 'Jannowitzbrücke', 'Alexanderplatz'], 0));
+    add('weltzeituhr', P.weltzeituhr());
+    add('fountain', P.fountain());
+    tex.addCanvas('fernsehturm', P.fernsehturm());
+    add('platform_bench', P.platformBench());
     add('street_sign', P.streetSign('KREUZBERG'));
     add('railing', P.railingX());
     add('terrace_table', P.terraceTable());

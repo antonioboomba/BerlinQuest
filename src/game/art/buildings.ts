@@ -85,7 +85,7 @@ function edge(ctx: Ctx, x0: number, y0: number, x1: number, y1: number, c: strin
 
 // ───────────── Fachadas ─────────────
 
-export type BuildingKind = 'apartment' | 'buergeramt' | 'bar' | 'club';
+export type BuildingKind = 'apartment' | 'buergeramt' | 'bar' | 'club' | 'office';
 
 export interface BuildingSpec {
   kind: BuildingKind;
@@ -96,6 +96,8 @@ export interface BuildingSpec {
   seed: number;
   /** vano (baldosa) de la puerta en la fachada principal */
   doorBay: number;
+  /** rótulo de la planta baja (edificios «office») */
+  sign?: string;
 }
 
 const BAY = HALF_W; // anchura de un vano = una baldosa a lo largo de la fachada
@@ -338,6 +340,15 @@ function mainFacade(spec: BuildingSpec): FaceTex {
     rect(ctx, mx, my, 20, 7, '#ffffff');
     lights.push({ x: mx + 10, y: my + 16, color: PAL.neonRed, r: 50, alpha: 0.55 });
     signPlate(ctx, 'KATER KARLO', W / 2, H - 22, '#3a1410', PAL.lamp);
+  }
+
+  if (spec.kind === 'office') {
+    // planta baja acristalada (grandes almacenes / oficinas)
+    rect(ctx, 0, gTop + 8, W, GROUND_H - 14, '#8fb0d8');
+    for (let x = 0; x < W; x += 24) rect(ctx, x, gTop + 8, 2, GROUND_H - 14, '#5a6278');
+    rect(ctx, 0, gTop + 8, W, 8, '#cfe0f5');
+    lights.push({ x: W / 2, y: gTop + 30, color: '#d8ecff', r: 70, alpha: 0.35 });
+    if (spec.sign) signPlate(ctx, spec.sign, W / 2, gTop - 12, '#22356b', '#ffffff');
   }
 
   if (spec.kind === 'club') {

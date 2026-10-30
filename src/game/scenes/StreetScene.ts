@@ -61,6 +61,8 @@ export class StreetScene extends WorldScene {
           ? { x: doorPos(amt).x, y: doorPos(amt).y + 0.3 }
           : data?.from === 'WG'
             ? { x: doorPos(BUILDINGS[0]).x, y: doorPos(BUILDINGS[0]).y + 0.3 }
+            : data?.from === 'UBahn'
+              ? { x: 4, y: 9.55 }
           : data?.x !== undefined
             ? { x: data.x, y: data.y! }
             : null,
@@ -78,6 +80,7 @@ export class StreetScene extends WorldScene {
       if (q.id === 'shift') return doorPos(BUILDINGS[2]);
       if (q.id === 'anmeldung') return q.step === 'get_wgb' && this.anna ? this.anna.pos : doorPos(BUILDINGS[1]);
       if (q.id === 'wg') return q.step === 'invite' && this.anna ? this.anna.pos : doorPos(BUILDINGS[0]);
+      if (q.id === 'unterwegs') return q.step === 'invite' ? doorPos(BUILDINGS[0]) : { x: 4, y: 9.65 };
       return null;
     };
     this.time.addEvent({ delay: 2000, loop: true, callback: () => this.savePosition() });
@@ -248,7 +251,14 @@ export class StreetScene extends WorldScene {
     this.placeProp('ubahn_sign', x0 - 0.45, y0 - 0.2, { block: 0.3 });
     this.placeProp('ubahn_sign', x0 + wx + 0.35, y0 + wy - 0.2, { block: 0.3 });
     const entry = { x: x0 + 1, y: y0 - 0.35 };
-    this.interactables.push({ x: entry.x, y: entry.y, radius: 1.3, label: () => 'Bajar al U-Bahn', action: () => this.ui.openDialog('ubahn') });
+    const ubahnOpen = () => (GameState.isActive('unterwegs') && !GameState.isActive('unterwegs', 'invite')) || GameState.isDone('unterwegs');
+    this.interactables.push({
+      x: entry.x,
+      y: entry.y,
+      radius: 1.3,
+      label: () => (ubahnOpen() ? 'Bajar al U-Bahn (Moritzplatz)' : 'U-Bahnhof Moritzplatz'),
+      action: () => (ubahnOpen() ? this.goTo('UBahn', { from: 'Street' }) : this.ui.openDialog('ubahn_before')),
+    });
     this.pois.push({ ...entry, icon: 'U', label: 'U-Bahn' });
     this.minimap.push({ rect: { x0, y0, x1: x0 + wx, y1: y0 + wy }, color: 0x2a5ad8 });
   }

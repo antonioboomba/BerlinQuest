@@ -361,6 +361,10 @@ export class WGScene extends InteriorScene {
   }
 
   private talkEmre(a: Actor) {
+    if (GameState.isActive('unterwegs', 'invite'))
+      return this.ui.openDialog('emre_trip_invite', a, (act) => {
+        if (act === 'trip:invited') GameState.setQuest('station');
+      });
     if (GameState.isActive('wg', 'meet') && !GameState.flag('met_emre'))
       return this.ui.openDialog('wg_emre_meet', a, (act) => {
         if (act === 'wg:met_emre') {
@@ -378,6 +382,7 @@ export class WGScene extends InteriorScene {
 
   private objective(): Pt | null {
     const q = GameState.data.quest;
+    if (q.id === 'unterwegs' && q.step === 'invite') return this.emre.pos;
     if (q.id !== 'wg') return q.id === 'none' ? null : DOOR;
     switch (q.step) {
       case 'meet':
