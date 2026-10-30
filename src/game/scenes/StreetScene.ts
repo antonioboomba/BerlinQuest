@@ -176,9 +176,9 @@ export class StreetScene extends WorldScene {
     this.placeProp('tree1', 10.6, 11.4, { block: 0.6 });
     this.placeProp('tree2', 22.4, 11.5, { block: 0.6 });
     // acera norte
-    this.placeProp('bike_red', 1.6, 4.75, { block: [0.9, 0.4] });
-    // bici de prueba del Bike Pack 01 (PNG externo); sin él, la procedural azul de siempre
-    this.placeProp(this.propKey('bike_black', 'bike_blue'), 2.5, 4.75, { block: [0.9, 0.4] });
+    // bicis del Bike Pack 01 (PNG externos); sin ellos, las procedurales de siempre
+    this.placeProp(this.propKey('bike_turquoise', 'bike_red'), 1.6, 4.75, { block: [0.9, 0.4] });
+    this.placeProp(this.propKey('bike_black_basket', 'bike_blue'), 2.5, 4.75, { block: [0.9, 0.4] });
     this.placeProp('bin', 5.6, 4.6, { block: 0.4 });
     this.placeProp('planter0', 6.6, 4.55, { block: 0.5 });
     this.placeProp('planter1', 9.4, 4.55, { block: 0.5 });
@@ -193,8 +193,8 @@ export class StreetScene extends WorldScene {
     this.placeProp('street_sign', 12.6, 9.3, { block: 0.3 });
     this.placeProp('mailbox', 8.2, 9.4, { block: 0.4 });
     this.placeProp('litfass', 20.6, 10.4, { block: 0.8 });
-    this.placeProp('bike_green', 17.2, 9.55, { block: [0.9, 0.4] });
-    this.placeProp('bike_red', 18.1, 9.55, { block: [0.9, 0.4] });
+    this.placeProp(this.propKey('bike_green_cargo', 'bike_green'), 17.2, 9.55, { block: [0.9, 0.4] });
+    this.placeProp(this.propKey('bike_red_locked', 'bike_red'), 18.1, 9.55, { block: [0.9, 0.4] });
     this.placeProp('bench', 7.6, 12.2, { block: [1.6, 0.5] });
     this.placeProp('bench', 18.4, 12.2, { block: [1.6, 0.5] });
     this.placeProp('planter2', 12.4, 11.6, { block: 0.5 });

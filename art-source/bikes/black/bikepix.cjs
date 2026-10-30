@@ -1,10 +1,13 @@
 // Convierte una ilustración de alta resolución en pixel art a un lienzo fijo:
 // paleta limitada (k-means), reducción por color dominante de cada bloque (no promedio: conserva colores
 // puros de pegatinas), alfa binario, limpieza de píxeles sueltos y contorno oscuro de 1 px.
-// uso: node bikepix.cjs entrada.png salida.png [W=128] [H=112] [colores=32]
+// uso: node bikepix.cjs entrada.png salida.png [W=128] [H=112] [colores=32] [escala]
+// Con «escala» el lienzo se calcula a partir de ella (objeto + 2 px por lado) y W/H se ignoran.
+// MODE=avg: cada píxel es el promedio de su bloque cuantizado después a la paleta (menos ruido a tamaños pequeños).
 const P = require('../../tony/corregidos/png.cjs');
-const [inF, outF, Ws, Hs, Ks] = process.argv.slice(2);
-const CW = +(Ws || 128), CH = +(Hs || 112), K = +(Ks || 32);
+const [inF, outF, Ws, Hs, Ks, Ss] = process.argv.slice(2);
+let CW = +(Ws || 128), CH = +(Hs || 112);
+const K = +(Ks || 32);
 const src = P.read(inF);
 const { w, h, data } = src;
 
@@ -13,7 +16,8 @@ let bx0 = w, by0 = h, bx1 = -1, by1 = -1;
 for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (data[(y * w + x) * 4 + 3] >= 128) { bx0 = Math.min(bx0, x); by0 = Math.min(by0, y); bx1 = Math.max(bx1, x); by1 = Math.max(by1, y); }
 const bw = bx1 - bx0 + 1, bh = by1 - by0 + 1;
 // cabe en el lienzo dejando 1 px para el contorno y 1 px abajo
-const s = Math.min((CW - 4) / bw, (CH - 3) / bh);
+const s = Ss ? +Ss : Math.min((CW - 4) / bw, (CH - 3) / bh);
+if (Ss) { CW = Math.round(bw * s) + 4; CH = Math.round(bh * s) + 3; }
 const tw = Math.round(bw * s), th = Math.round(bh * s);
 
 // 2 · paleta por k-means sobre píxeles opacos (muestreo)
@@ -52,6 +56,11 @@ for (let y = 0; y < th; y++) for (let x = 0; x < tw; x++) {
   }
   if (cover / n < 0.42) continue;
   let bk = 0; for (let k = 1; k < K; k++) if (votes[k] > votes[bk]) bk = k;
+  if (process.env.MODE === 'avg') {
+    let r = 0, g = 0, b = 0, m = 0;
+    for (let yy = sy0; yy < sy1; yy++) for (let xx = sx0; xx < sx1; xx++) { const i = (yy * w + xx) * 4; if (data[i + 3] < 128) continue; r += data[i]; g += data[i + 1]; b += data[i + 2]; m++; }
+    bk = near([r / m, g / m, b / m]);
+  }
   idx[(oy + y) * CW + ox + x] = bk;
 }
 // 4 · limpieza: píxeles sueltos (≤ 1 vecino opaco) fuera
