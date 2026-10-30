@@ -244,7 +244,6 @@ export class StreetScene extends WorldScene {
     this.placeProp(this.propKey('bike_red_locked', 'bike_red'), 18.1, 9.55, { block: [0.9, 0.4] });
     this.placeProp('bench', 7.6, 12.2, { block: [1.6, 0.5] });
     this.placeProp('bench', 18.4, 12.2, { block: [1.6, 0.5] });
-    this.placeProp('planter2', 12.4, 11.6, { block: 0.5 });
     this.placeProp('bin', 9.5, 12.3, { block: 0.4 });
 
     this.minimap.push(
