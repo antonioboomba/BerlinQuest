@@ -251,6 +251,13 @@ export class StreetScene extends WorldScene {
       ['bike_turquoise', 'bike_red', 14.3, 12.2],
       ['bike_red_locked', 'bike_red', 15.2, 12.2],
       ['bike_black_basket', 'bike_blue', 22.3, 9.55],
+      // aparcamiento junto al U-Bahn (lado oeste; la entrada norte queda libre)
+      ['bike_green_cargo', 'bike_green', 0.7, 10.9],
+      ['bike_black_basket', 'bike_blue', 1.6, 10.9],
+      ['bike_red_locked', 'bike_red', 2.5, 10.9],
+      ['bike_turquoise', 'bike_blue', 0.7, 11.9],
+      ['bike_red_locked', 'bike_red', 1.6, 11.9],
+      ['bike_green_cargo', 'bike_green', 2.5, 11.9],
     ];
     for (const [ext, proc, x, y] of bikes) this.placeProp(this.propKey(ext, proc), x, y, { block: [0.9, 0.4] });
     this.placeProp('bench', 7.6, 12.2, { block: [1.6, 0.5] });
