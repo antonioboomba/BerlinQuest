@@ -38,6 +38,12 @@ export class BootScene extends Phaser.Scene {
       this.load.image(key, `assets/${entry.file}`);
       queued++;
     }
+    // acera reproducida de la referencia (atlas de baldosas)
+    const ref = this.manifest.ground?.sidewalk_ref;
+    if (ref?.enabled) {
+      this.load.image('sidewalk_ref', `assets/${ref.file}`);
+      queued++;
+    }
     this.load.on('loaderror', (file: Phaser.Loader.File) => console.warn(`[sprites] No se pudo cargar ${file.src}; se usa el arte procedural.`));
     if (!queued) return this.build();
     this.load.once('complete', () => this.build());
@@ -86,6 +92,16 @@ export class BootScene extends Phaser.Scene {
     // ── Suelos ──
     const kinds: TileKind[] = ['cobble', 'slab', 'curb', 'grass', 'water', 'wood', 'tiles', 'carpet', 'asphaltDark', 'lino', 'carpetBlue', 'trackX', 'trackY', 'edgeX', 'edgeY', 'plaza'];
     for (const k of kinds) for (let v = 0; v < TILE_VARIANTS; v++) tex.addCanvas(`tile_${k}_${v}`, tileCanvas(k, v));
+    // acera reproducida de la referencia (atlas)
+    const ref = this.manifest.ground?.sidewalk_ref;
+    // solo si el atlas cargó y tiene filas completas de 64×32; si no, se queda el suelo de antes
+    if (ref?.enabled && tex.exists('sidewalk_ref')) {
+      const img = tex.get('sidewalk_ref').getSourceImage() as { width: number; height: number };
+      // 3 filas = acera norte (y 4, y 5, cara del bordillo en y 6); 5 filas = además la acera sur (y 9, y 10)
+      if (img.width % 64 === 0 && (img.height === 96 || img.height === 160))
+        this.registry.set('ground:sidewalk_ref', { x0: ref.x0 ?? 0, cols: img.width / 64, south: img.height === 160 });
+      else console.warn(`[sprites] ${ref.file} mide ${img.width}×${img.height}; se esperaba N×64 × 96 o 160. Se usa la acera de antes.`);
+    }
 
     // ── Objetos ──
     const add = (key: string, art: P.PropArt) => {

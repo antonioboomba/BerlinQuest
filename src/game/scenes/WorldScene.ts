@@ -155,7 +155,14 @@ export abstract class WorldScene extends Phaser.Scene {
   }
 
   /** Suelo como una sola textura compuesta (rápido de dibujar). */
-  protected paintGround(w: number, h: number, kindAt: (x: number, y: number) => string | null, key: string) {
+  protected paintGround(
+    w: number,
+    h: number,
+    kindAt: (x: number, y: number) => string | null,
+    key: string,
+    /** capa opcional sobre el suelo ya montado; (ox, oy) = posición del lienzo en pantalla */
+    decorate?: (ctx: CanvasRenderingContext2D, ox: number, oy: number) => void,
+  ) {
     const minX = toScreen(0, h).x - HALF_W;
     const minY = 0;
     const width = (w + h) * HALF_W + TILE_W;
@@ -175,6 +182,7 @@ export abstract class WorldScene extends Phaser.Scene {
           const s = toScreen(x, y);
           ctx.drawImage(src, s.x - HALF_W - minX, s.y - minY);
         }
+      decorate?.(ctx, minX, minY);
       this.textures.addCanvas(key, canvas);
     }
     this.add.image(minX, minY, key).setOrigin(0, 0).setDepth(-100000);

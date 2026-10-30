@@ -2,7 +2,7 @@ import { buildingArt, flatTop, isoBox, type BuildingSpec } from '../art/building
 import { pixelText, textWidth } from '../art/font';
 import { FACADES, PAL } from '../art/palette';
 import { makeCanvas, poly, px, rect, shade } from '../art/pixel';
-import { depthOf, HALF_H, HALF_W, toScreen } from '../iso';
+import { depthOf, HALF_H, HALF_W, TILE_H, TILE_W, toScreen } from '../iso';
 import { GameState } from '../state/GameState';
 import { Actor } from '../world/Actor';
 import { BenchBrain, ChatBrain, PatrolBrain, StaticBrain, type Brain } from '../world/Npc';
@@ -44,7 +44,14 @@ export class StreetScene extends WorldScene {
     this.brains = [];
     this.cameras.main.setBackgroundColor(PAL.night);
 
-    this.paintGround(MAP_W, MAP_H, groundKind, 'ground_street');
+    const ref = this.registry.get('ground:sidewalk_ref') as { x0: number; cols: number; south: boolean } | undefined;
+    this.paintGround(
+      MAP_W,
+      MAP_H,
+      groundKind,
+      ref ? `ground_street_ref${ref.x0}x${ref.cols}${ref.south ? 's' : ''}` : 'ground_street',
+      ref ? (ctx, ox, oy) => this.paintSidewalkRef(ctx, ox, oy, ref) : undefined,
+    );
     this.buildBuildings();
     this.buildStreetFurniture();
     this.buildUbahn(3, 10);
@@ -85,6 +92,21 @@ export class StreetScene extends WorldScene {
     };
     this.time.addEvent({ delay: 2000, loop: true, callback: () => this.savePosition() });
     this.events.once('shutdown', () => this.savePosition());
+  }
+
+  /**
+   * Acera reproducida de la referencia: baldosas del atlas sobre la acera norte (y = 4 losas, y = 5 losas y
+   * bordillo), la cara vertical del bordillo sobre la calzada (y = 6) y, si el atlas la trae, la acera sur
+   * (y = 9 con el bordillo hacia la calzada, y = 10), desde la columna x0.
+   */
+  private paintSidewalkRef(ctx: CanvasRenderingContext2D, ox: number, oy: number, ref: { x0: number; cols: number; south: boolean }) {
+    const atlas = this.textures.get('sidewalk_ref').getSourceImage() as HTMLImageElement;
+    const rows = ref.south ? [[0, 4], [1, 5], [2, 6], [3, 9], [4, 10]] : [[0, 4], [1, 5], [2, 6]];
+    for (let c = 0; c < ref.cols; c++)
+      for (const [row, y] of rows) {
+        const s = toScreen(ref.x0 + c, y);
+        ctx.drawImage(atlas, c * TILE_W, row * TILE_H, TILE_W, TILE_H, s.x - HALF_W - ox, s.y - oy, TILE_W, TILE_H);
+      }
   }
 
   // ───────────── Construcción ─────────────
