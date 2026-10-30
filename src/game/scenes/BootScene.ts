@@ -44,6 +44,11 @@ export class BootScene extends Phaser.Scene {
       this.load.image('sidewalk_ref', `assets/${ref.file}`);
       queued++;
     }
+    const cob = this.manifest.ground?.cobble_ref;
+    if (cob?.enabled) {
+      this.load.image('cobble_ref', `assets/${cob.file}`);
+      queued++;
+    }
     this.load.on('loaderror', (file: Phaser.Loader.File) => console.warn(`[sprites] No se pudo cargar ${file.src}; se usa el arte procedural.`));
     if (!queued) return this.build();
     this.load.once('complete', () => this.build());
@@ -101,6 +106,13 @@ export class BootScene extends Phaser.Scene {
       if (img.width % 64 === 0 && (img.height === 96 || img.height === 160))
         this.registry.set('ground:sidewalk_ref', { x0: ref.x0 ?? 0, cols: img.width / 64, south: img.height === 160 });
       else console.warn(`[sprites] ${ref.file} mide ${img.width}×${img.height}; se esperaba N×64 × 96 o 160. Se usa la acera de antes.`);
+    }
+    // adoquines de la calzada: N baldosas de 64×32 en fila; si no, los adoquines procedurales de antes
+    const cob = this.manifest.ground?.cobble_ref;
+    if (cob?.enabled && tex.exists('cobble_ref')) {
+      const img = tex.get('cobble_ref').getSourceImage() as { width: number; height: number };
+      if (img.width % 64 === 0 && img.width > 0 && img.height === 32) this.registry.set('ground:cobble_ref', img.width / 64);
+      else console.warn(`[sprites] ${cob.file} mide ${img.width}×${img.height}; se esperaba N×64 × 32. Se usan los adoquines de antes.`);
     }
 
     // ── Objetos ──

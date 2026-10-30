@@ -65,6 +65,8 @@ export interface AssetManifest {
   ground?: {
     /** acera reproducida de la referencia: atlas de 3 filas (y = 4, y = 5, cara del bordillo en y = 6) desde la columna x0 */
     sidewalk_ref?: { file: string; enabled: boolean; x0: number };
+    /** adoquines de la calzada reproducidos de la referencia: atlas de N baldosas 64×32 en fila */
+    cobble_ref?: { file: string; enabled: boolean };
   };
 }
 

@@ -1,5 +1,5 @@
 {
-  "_comment": "Sprites externos de Berlin Quest. Un personaje solo se usa en el juego cuando su entrada tiene enabled: true. Si el PNG falta o no mide 960x88, el juego usa el arte procedural. La pagina sprite-test.html carga el PNG aunque enabled sea false. hand (opcional): centro de la base del objeto que lleva en la mano, en pixeles del frame de 48x88 [x, y], de frente y de espaldas. props: objetos de la ciudad en pixel art a escala 1 (max 160x160); anchor = punto del PNG que se apoya en el suelo, shadow = sombra del juego bajo el objeto, glow = halo opcional del farol (quitarlo lo desactiva). Desactivados o invalidos, se usa el objeto procedural. ground.sidewalk_ref: acera reproducida de la referencia (atlas de baldosas 64x32 desde la columna x0: 3 filas = acera norte y cara del bordillo, 5 filas = ademas la acera sur); enabled false = aceras de antes.",
+  "_comment": "Sprites externos de Berlin Quest. Un personaje solo se usa en el juego cuando su entrada tiene enabled: true. Si el PNG falta o no mide 960x88, el juego usa el arte procedural. La pagina sprite-test.html carga el PNG aunque enabled sea false. hand (opcional): centro de la base del objeto que lleva en la mano, en pixeles del frame de 48x88 [x, y], de frente y de espaldas. props: objetos de la ciudad en pixel art a escala 1 (max 160x160); anchor = punto del PNG que se apoya en el suelo, shadow = sombra del juego bajo el objeto, glow = halo opcional del farol (quitarlo lo desactiva). Desactivados o invalidos, se usa el objeto procedural. ground.sidewalk_ref: acera reproducida de la referencia (atlas de baldosas 64x32 desde la columna x0: 3 filas = acera norte y cara del bordillo, 5 filas = ademas la acera sur); enabled false = aceras de antes. ground.cobble_ref: adoquines de la calzada (N baldosas 64x32 en fila); enabled false = adoquines de antes.",
   "characters": {
     "player": { "file": "characters/player.png", "enabled": true, "hand": { "front": [31, 62], "back": [39, 56] } }
   },
@@ -10,5 +10,8 @@
     "bike_red_locked": { "file": "props/bike_red_locked.png", "enabled": true, "anchor": [24, 43], "shadow": { "w": 42, "h": 10, "angle": -20 } },
     "lamp_berlin": { "file": "props/lamp_berlin.png", "enabled": true, "anchor": [15, 129], "shadow": { "w": 18, "h": 6 }, "glow": { "x": 0, "y": -98, "r": 64 } }
   },
-  "ground": { "sidewalk_ref": { "file": "ground/sidewalk_ref.png", "enabled": true, "x0": 0 } }
+  "ground": {
+    "sidewalk_ref": { "file": "ground/sidewalk_ref.png", "enabled": true, "x0": 0 },
+    "cobble_ref": { "file": "ground/cobble_ref.png", "enabled": true }
+  }
 }

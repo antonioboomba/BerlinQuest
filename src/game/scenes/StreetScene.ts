@@ -45,12 +45,18 @@ export class StreetScene extends WorldScene {
     this.cameras.main.setBackgroundColor(PAL.night);
 
     const ref = this.registry.get('ground:sidewalk_ref') as { x0: number; cols: number; south: boolean } | undefined;
+    const cobbles = this.registry.get('ground:cobble_ref') as number | undefined;
     this.paintGround(
       MAP_W,
       MAP_H,
       groundKind,
-      ref ? `ground_street_ref${ref.x0}x${ref.cols}${ref.south ? 's' : ''}` : 'ground_street',
-      ref ? (ctx, ox, oy) => this.paintSidewalkRef(ctx, ox, oy, ref) : undefined,
+      `ground_street${cobbles ? `_cob${cobbles}` : ''}${ref ? `_ref${ref.x0}x${ref.cols}${ref.south ? 's' : ''}` : ''}`,
+      ref || cobbles
+        ? (ctx, ox, oy) => {
+            if (cobbles) this.paintCobblesRef(ctx, ox, oy, cobbles); // primero la calzada…
+            if (ref) this.paintSidewalkRef(ctx, ox, oy, ref); // …y encima la cara del bordillo
+          }
+        : undefined,
     );
     this.buildBuildings();
     this.buildStreetFurniture();
@@ -107,6 +113,26 @@ export class StreetScene extends WorldScene {
         const s = toScreen(ref.x0 + c, y);
         ctx.drawImage(atlas, c * TILE_W, row * TILE_H, TILE_W, TILE_H, s.x - HALF_W - ox, s.y - oy, TILE_W, TILE_H);
       }
+  }
+
+  /**
+   * Adoquines reproducidos de la referencia en toda la calzada (casillas «cobble»): una de las N baldosas del atlas
+   * por casilla, elegida sin repetir la de la izquierda ni la de arriba para que no se formen patrones.
+   */
+  private paintCobblesRef(ctx: CanvasRenderingContext2D, ox: number, oy: number, frames: number) {
+    const atlas = this.textures.get('cobble_ref').getSourceImage() as HTMLImageElement;
+    const pick: number[][] = [];
+    for (let y = 0; y < MAP_H; y++) {
+      pick[y] = [];
+      for (let x = 0; x < MAP_W; x++) {
+        if (groundKind(x, y) !== 'cobble') continue;
+        let f = Math.floor((Math.abs(Math.sin(x * 12.9898 + y * 78.233) * 43758.5453) % 1) * frames);
+        for (let i = 0; i < frames && (f === pick[y][x - 1] || f === pick[y - 1]?.[x]); i++) f = (f + 1) % frames;
+        pick[y][x] = f;
+        const s = toScreen(x, y);
+        ctx.drawImage(atlas, f * TILE_W, 0, TILE_W, TILE_H, s.x - HALF_W - ox, s.y - oy, TILE_W, TILE_H);
+      }
+    }
   }
 
   // ───────────── Construcción ─────────────
