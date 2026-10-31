@@ -552,9 +552,13 @@ export class UIScene extends Phaser.Scene {
     g.clear();
     if (!big) {
       g.fillStyle(0x0b1222, 1).fillRect(m.x, m.y, m.w, m.h);
-      this.miniFrame.clear();
-      this.panel(this.miniFrame, m.x, m.y, m.w, m.h, 14);
-      this.miniFrame.lineStyle(1, C.borderSoft, 1).lineBetween(m.x + 12, m.y + 30, m.x + m.w - 12, m.y + 30);
+      const frameKey = `${m.x},${m.y},${m.w},${m.h}`;
+      if (this.miniFrame.getData('k') !== frameKey) {
+        this.miniFrame.setData('k', frameKey);
+        this.miniFrame.clear();
+        this.panel(this.miniFrame, m.x, m.y, m.w, m.h, 14);
+        this.miniFrame.lineStyle(1, C.borderSoft, 1).lineBetween(m.x + 12, m.y + 30, m.x + m.w - 12, m.y + 30);
+      }
       this.miniTitle.setPosition(m.x + 14, m.y + 6).setText(`📍 ${world.displayName}`);
       this.miniFrame.setDepth(1);
       this.mini.setDepth(2);
@@ -568,15 +572,27 @@ export class UIScene extends Phaser.Scene {
       g.lineStyle(1, 0x000000, 0.25).strokePoints(pts, true);
     }
     const labels = big?.labels ?? this.miniLabels;
-    labels.removeAll(true);
-    for (const poi of world.pois) {
+    // los textos de los iconos solo se crean cuando cambian los puntos; en cada fotograma solo se recolocan
+    const sig = world.pois.map((poi) => `${poi.icon}|${big ? poi.label : ''}`).join('\n');
+    const rebuild = labels.getData('sig') !== sig;
+    if (rebuild) {
+      labels.removeAll(true);
+      labels.setData('sig', sig);
+    }
+    const per = big ? 2 : 1;
+    world.pois.forEach((poi, i) => {
       const s = proj(poi.x, poi.y);
       const r = big ? 16 : 11;
       g.fillStyle(0xffffff, 1).fillCircle(s.x, s.y, r);
       g.lineStyle(2, 0x2a2238, 1).strokeCircle(s.x, s.y, r);
-      labels.add(this.text(s.x, s.y, poi.icon, big ? T.sm : 12, poi.icon === 'U' ? '#2a5ad8' : C.ink, true).setOrigin(0.5));
-      if (big) labels.add(this.text(s.x, s.y + 22, poi.label, T.sm, C.white, true).setOrigin(0.5, 0).setStroke('#111a2e', 4));
-    }
+      if (rebuild) {
+        labels.add(this.text(s.x, s.y, poi.icon, big ? T.sm : 12, poi.icon === 'U' ? '#2a5ad8' : C.ink, true).setOrigin(0.5));
+        if (big) labels.add(this.text(s.x, s.y + 22, poi.label, T.sm, C.white, true).setOrigin(0.5, 0).setStroke('#111a2e', 4));
+      } else {
+        (labels.list[i * per] as Phaser.GameObjects.Text).setPosition(s.x, s.y);
+        if (big) (labels.list[i * per + 1] as Phaser.GameObjects.Text).setPosition(s.x, s.y + 22);
+      }
+    });
     const obj = world.objectivePoi();
     if (obj) {
       const s = proj(obj.x, obj.y);

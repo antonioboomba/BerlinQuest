@@ -51,6 +51,8 @@ export abstract class WorldScene extends Phaser.Scene {
   private nightLights: { x: number; y: number; r: number; a: number }[] = [];
   private nightRT: Phaser.GameObjects.RenderTexture | null = null;
   private nightBrush: Phaser.GameObjects.Image | null = null;
+  private nightBase: Phaser.GameObjects.RenderTexture | null = null;
+  private nightPlayerAt = { x: NaN, y: NaN };
   private nightCfg = { color: 0x05060f, alpha: 0.7 };
   private fog: { img: Phaser.GameObjects.Image; vx: number; base: number; phase: number }[] = [];
   private marker: Phaser.GameObjects.Image | null = null;
@@ -71,6 +73,8 @@ export abstract class WorldScene extends Phaser.Scene {
     this.nightOn = false;
     this.nightLights = [];
     this.nightRT = null;
+    this.nightBase = null;
+    this.nightPlayerAt = { x: NaN, y: NaN };
     this.fog = [];
     this.transitioning = false;
     this.marker = null;
@@ -156,19 +160,33 @@ export abstract class WorldScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * La oscuridad con los huecos fijos de las luces se pinta una sola vez en nightBase; en cada fotograma solo se
+   * copia y se abre el hueco del jugador, y solo si el jugador se ha movido.
+   */
   private drawNight() {
     const rt = this.nightRT;
     const brush = this.nightBrush;
     if (!rt || !brush) return;
-    rt.clear();
-    rt.fill(this.nightCfg.color, this.nightCfg.alpha);
-    const hole = (x: number, y: number, r: number, a: number) => {
-      brush.setScale(r / 64).setAlpha(Math.min(1, a));
-      rt.erase(brush, x - rt.x, y - rt.y);
-    };
-    for (const l of this.nightLights) hole(l.x, l.y, l.r * 1.35, l.a * 2.4);
     const p = this.player?.sprite;
-    if (p) hole(p.x, p.y - 36, 70, 0.55); // el jugador siempre se distingue
+    const px = p ? Math.round(p.x) : NaN;
+    const py = p ? Math.round(p.y) : NaN;
+    if (this.nightBase && px === this.nightPlayerAt.x && py === this.nightPlayerAt.y) return;
+    this.nightPlayerAt = { x: px, y: py };
+    const hole = (target: Phaser.GameObjects.RenderTexture, x: number, y: number, r: number, a: number) => {
+      brush.setScale(r / 64).setAlpha(Math.min(1, a));
+      target.erase(brush, x - rt.x, y - rt.y);
+    };
+    if (!this.nightBase) {
+      const base = this.make.renderTexture({ x: rt.x, y: rt.y, width: rt.width, height: rt.height }, false).setOrigin(0, 0);
+      base.fill(this.nightCfg.color, this.nightCfg.alpha);
+      for (const l of this.nightLights) hole(base, l.x, l.y, l.r * 1.35, l.a * 2.4);
+      this.nightBase = base;
+      this.events.once('shutdown', () => base.destroy());
+    }
+    rt.clear();
+    rt.draw(this.nightBase, 0, 0);
+    if (p) hole(rt, p.x, p.y - 36, 70, 0.55); // el jugador siempre se distingue
   }
 
   /** Posición inicial válida: si la guardada cae fuera del mapa o dentro de algo, usa la de reserva. */
