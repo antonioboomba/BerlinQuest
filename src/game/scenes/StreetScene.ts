@@ -238,11 +238,9 @@ export class StreetScene extends WorldScene {
     }
     // acera norte
     // bicis del Bike Pack 01 (PNG externos); sin ellos, las procedurales de siempre
-    // terraza del Späti: dos mesas con sus sillas a los lados de la puerta (la puerta y el portal de casa quedan libres)
+    // terraza del Späti: dos mesas a los lados de la puerta (la puerta y el portal de casa quedan libres)
     this.placeProp(this.propKey('table_berlin', 'terrace_table'), 0.75, 4.75, { block: 0.6 });
-    this.placeProp('chair', 1.3, 4.85);
     this.placeProp(this.propKey('table_berlin', 'terrace_table'), 2.45, 4.75, { block: 0.6 });
-    this.placeProp('chair', 1.9, 4.85, { flip: true });
     this.placeProp('bin', 5.6, 4.6, { block: 0.4 });
     this.placeProp(this.propKey('planter_berlin', 'planter0'), 6.6, 4.55, { block: this.registry.get('prop:planter_berlin') ? [1.2, 0.4] : 0.5 });
     this.placeProp(this.propKey('planter_berlin', 'planter1'), 9.4, 4.55, { block: this.registry.get('prop:planter_berlin') ? [1.2, 0.4] : 0.5 });
