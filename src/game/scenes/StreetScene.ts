@@ -282,6 +282,7 @@ export class StreetScene extends WorldScene {
     ];
     for (const [ext, proc, x, y] of bikes) this.placeProp(this.propKey(ext, proc), x, y, { block: [0.9, 0.4] });
     this.placeProp(this.propKey('bench_berlin', 'bench'), 7.6, 12.2, { block: [1.9, 0.5] });
+    this.placeProp(this.propKey('bench_berlin', 'bench'), 12.9, 12.2, { block: [1.9, 0.5] }); // junto a las 2 bicis, frente al cartel KREUZBERG
     this.placeProp(this.propKey('bench_berlin', 'bench'), 18.4, 12.2, { block: [1.9, 0.5] });
     this.placeProp(this.propKey('bench_berlin', 'bench'), 21.6, 12.2, { block: [1.9, 0.5] });
     this.placeProp('bin', 9.5, 12.3, { block: 0.4 });
