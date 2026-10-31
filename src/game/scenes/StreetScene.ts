@@ -286,6 +286,15 @@ export class StreetScene extends WorldScene {
     this.placeProp(this.propKey('bench_berlin', 'bench'), 18.4, 12.2, { block: [1.9, 0.5] });
     this.placeProp(this.propKey('bench_berlin', 'bench'), 21.6, 12.2, { block: [1.9, 0.5] });
     this.placeProp('bin', 9.5, 12.3, { block: 0.4 });
+    // más jardineras en huecos libres: entre la terraza del Kater y la puerta del club, y en la fila de bancos de la plaza
+    const planterBlock: number | [number, number] = this.registry.get('prop:planter_berlin') ? [1.2, 0.4] : 0.5;
+    const planters: [string, number, number][] = [
+      ['planter2', 17.6, 4.55],
+      ['planter0', 5.9, 12.2],
+      ['planter1', 10.8, 12.2],
+      ['planter2', 16.55, 12.2],
+    ];
+    for (const [proc, x, y] of planters) this.placeProp(this.propKey('planter_berlin', proc), x, y, { block: planterBlock });
 
     this.minimap.push(
       { rect: { x0: 0, y0: 6, x1: MAP_W, y1: 9 }, color: 0x8d8aa0 },
