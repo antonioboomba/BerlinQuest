@@ -11,7 +11,8 @@
     "lamp_berlin": { "file": "props/lamp_berlin.png", "enabled": true, "anchor": [15, 129], "shadow": { "w": 18, "h": 6 }, "glow": { "x": 0, "y": -98, "r": 64, "color": "#ff8424" } },
     "bench_berlin": { "file": "props/bench_berlin.png", "enabled": true, "anchor": [41, 49], "shadow": { "w": 66, "h": 14, "angle": 26 } },
     "planter_berlin": { "file": "props/planter_berlin.png", "enabled": true, "anchor": [30, 54], "shadow": { "w": 50, "h": 12, "angle": 26 } },
-    "table_berlin": { "file": "props/table_berlin.png", "enabled": true, "anchor": [27, 53], "shadow": { "w": 40, "h": 14 } }
+    "table_berlin": { "file": "props/table_berlin.png", "enabled": true, "anchor": [27, 53], "shadow": { "w": 40, "h": 14 } },
+    "bin_berlin": { "file": "props/bin_berlin.png", "enabled": true, "anchor": [12, 43], "shadow": { "w": 18, "h": 6 } }
   },
   "facades": {
     "bar": { "file": "facades/kater.png", "enabled": true, "door": 50, "lights": [{ "x": 97, "y": 57, "color": "#ff4f8a", "r": 70, "alpha": 0.5 }, { "x": 158, "y": 54, "color": "#ff4f8a", "r": 40, "alpha": 0.45 }, { "x": 45, "y": 45, "color": "#ffcf6a", "r": 30, "alpha": 0.5 }, { "x": 179, "y": 54, "color": "#ffcf6a", "r": 30, "alpha": 0.5 }, { "x": 13, "y": 127, "color": "#ffb85c", "r": 40, "alpha": 0.45 }, { "x": 50, "y": 131, "color": "#ffb85c", "r": 36, "alpha": 0.45 }, { "x": 87, "y": 122, "color": "#ffb85c", "r": 40, "alpha": 0.45 }, { "x": 129, "y": 120, "color": "#ffb85c", "r": 40, "alpha": 0.45 }, { "x": 35, "y": 27, "color": "#ffcf6a", "r": 24, "alpha": 0.35 }, { "x": 100, "y": 28, "color": "#ffcf6a", "r": 24, "alpha": 0.35 }] }

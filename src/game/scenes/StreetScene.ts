@@ -241,14 +241,14 @@ export class StreetScene extends WorldScene {
     // terraza del Späti: dos mesas a los lados de la puerta (la puerta y el portal de casa quedan libres)
     this.placeProp(this.propKey('table_berlin', 'terrace_table'), 0.75, 4.75, { block: 0.6 });
     this.placeProp(this.propKey('table_berlin', 'terrace_table'), 2.45, 4.75, { block: 0.6 });
-    this.placeProp('bin', 5.6, 4.6, { block: 0.4 });
+    this.placeProp(this.propKey('bin_berlin', 'bin'), 5.6, 4.6, { block: 0.4 });
     this.placeProp(this.propKey('planter_berlin', 'planter0'), 6.6, 4.55, { block: this.registry.get('prop:planter_berlin') ? [1.2, 0.4] : 0.5 });
     this.placeProp(this.propKey('planter_berlin', 'planter1'), 9.4, 4.55, { block: this.registry.get('prop:planter_berlin') ? [1.2, 0.4] : 0.5 });
     this.placeProp(this.propKey('table_berlin', 'terrace_table'), 12.9, 4.75, { block: 0.6 });
     this.placeProp('chair', 13.5, 4.85);
     this.placeProp(this.propKey('table_berlin', 'terrace_table'), 16.4, 4.75, { block: 0.6 });
     this.placeProp('chair', 15.8, 4.85, { flip: true });
-    this.placeProp('bin', 23.4, 4.6, { block: 0.4 });
+    this.placeProp(this.propKey('bin_berlin', 'bin'), 23.4, 4.6, { block: 0.4 });
     // acera sur y plaza
     for (const x of [9.5, 10.5, 11.5]) this.placeProp('bollard', x, 9.2, { block: 0.25 });
     this.placeProp('street_sign', 12.6, 9.3, { block: 0.3 });
@@ -285,7 +285,7 @@ export class StreetScene extends WorldScene {
     this.placeProp(this.propKey('bench_berlin', 'bench'), 12.9, 12.2, { block: [1.9, 0.5] }); // junto a las 2 bicis, frente al cartel KREUZBERG
     this.placeProp(this.propKey('bench_berlin', 'bench'), 18.4, 12.2, { block: [1.9, 0.5] });
     this.placeProp(this.propKey('bench_berlin', 'bench'), 21.6, 12.2, { block: [1.9, 0.5] });
-    this.placeProp('bin', 9.5, 12.3, { block: 0.4 });
+    this.placeProp(this.propKey('bin_berlin', 'bin'), 9.5, 12.3, { block: 0.4 });
     // más jardineras en huecos libres: entre la terraza del Kater y la puerta del club, y en la fila de bancos de la plaza
     const planterBlock: number | [number, number] = this.registry.get('prop:planter_berlin') ? [1.2, 0.4] : 0.5;
     const planters: [string, number, number][] = [

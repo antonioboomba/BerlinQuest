@@ -240,7 +240,7 @@ export class UBahnScene extends InteriorScene {
     this.placeProp('platform_bench', BENCH2.seat.x, BENCH2.seat.y, { block: [0.5, 1.6] });
     this.placeProp('netzplan', PLAN.x, PLAN.y - 0.6, { block: 0.8 });
     this.placeProp('ticket_machine', MACHINE.x + 0.6, MACHINE.y - 0.4, { block: 0.6 });
-    this.placeProp('bin', 9.6, 4.2, { block: 0.4 });
+    this.placeProp(this.propKey('bin_berlin', 'bin'), 9.6, 4.2, { block: 0.4 });
     this.placeProp('plant0', 15.2, 9.8, { block: 0.5 });
     for (const [x, y] of [[4, 4], [11, 4], [6, 8], [12, 8]]) {
       const s = toScreen(x, y);
