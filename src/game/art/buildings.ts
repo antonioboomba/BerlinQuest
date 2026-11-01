@@ -176,7 +176,8 @@ function neonText(ctx: Ctx, text: string, x: number, y: number, color: string, s
 
 function signPlate(ctx: Ctx, text: string, cx: number, y: number, bg: string, fg: string) {
   const tw = textWidth(text, 2);
-  const x = Math.round(cx - tw / 2 - 6);
+  // x par: la fachada se inclina 1 px cada 2 columnas pares, así cada píxel (2×2) de la letra cae entero en un escalón
+  const x = 2 * Math.round((cx - tw / 2 - 6) / 2);
   rect(ctx, x, y, tw + 12, 16, bg);
   rect(ctx, x, y, tw + 12, 2, shade(bg, 1.3));
   rect(ctx, x, y + 14, tw + 12, 2, shade(bg, 0.7));
@@ -279,6 +280,7 @@ function mainFacade(spec: BuildingSpec): FaceTex {
     rect(ctx, dx + 23, gTop + 38, 2, 8, '#6a6a7a');
     lights.push({ x: dx + 20, y: gTop + 40, color: '#bfe0ff', r: 60, alpha: 0.5 });
     signPlate(ctx, 'BÜRGERAMT', dx + 20, gTop - 12, '#22356b', '#ffffff');
+    lights.push({ x: dx + 20, y: gTop - 4, color: '#d8ecff', r: 36, alpha: 0.4 }); // letrero iluminado: legible de noche
     // bandera alemana
     const fx = dx + 54;
     const fy = ATTIC_H + 6;
