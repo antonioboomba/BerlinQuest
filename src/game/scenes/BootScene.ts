@@ -3,7 +3,7 @@ import { CHARACTERS, FRAME_H, FRAME_W } from '../art/characters';
 import { PAL } from '../art/palette';
 import { glowCanvas, makeCanvas, rect } from '../art/pixel';
 import * as P from '../art/props';
-import { addProceduralSheet, handAnchor, propInfo, registerCharacterAnims, sheetError, type AssetManifest } from '../art/sprites';
+import { addProceduralSheet, handAnchor, PLATFORM_ROWS, propInfo, registerCharacterAnims, sheetError, type AssetManifest } from '../art/sprites';
 import { TILE_VARIANTS, tileCanvas, type TileKind } from '../art/tiles';
 import { DRINKS } from '../data/bar';
 import { GameState } from '../state/GameState';
@@ -52,6 +52,11 @@ export class BootScene extends Phaser.Scene {
     const cob = this.manifest.ground?.cobble_ref;
     if (cob?.enabled) {
       this.load.image('cobble_ref', `assets/${cob.file}`);
+      queued++;
+    }
+    const pf = this.manifest.ground?.platform_ref;
+    if (pf?.enabled) {
+      this.load.image('platform_ref', `assets/${pf.file}`);
       queued++;
     }
     this.load.on('loaderror', (file: Phaser.Loader.File) => console.warn(`[sprites] No se pudo cargar ${file.src}; se usa el arte procedural.`));
@@ -121,6 +126,21 @@ export class BootScene extends Phaser.Scene {
       const img = tex.get('cobble_ref').getSourceImage() as { width: number; height: number };
       if (img.width % 64 === 0 && img.width > 0 && img.height === 32) this.registry.set('ground:cobble_ref', img.width / 64);
       else console.warn(`[sprites] ${cob.file} mide ${img.width}×${img.height}; se esperaba N×64 × 32. Se usan los adoquines de antes.`);
+    }
+    // andén del U-Bahn: cada fila del atlas es un tipo de baldosa (tile_<tipo>_<n>), con sus variantes en fila
+    const pf = this.manifest.ground?.platform_ref;
+    if (pf?.enabled && tex.exists('platform_ref')) {
+      const img = tex.get('platform_ref').getSourceImage() as HTMLImageElement;
+      if (img.width === 12 * 64 && img.height === PLATFORM_ROWS.length * 32) {
+        PLATFORM_ROWS.forEach(([kind, n], row) => {
+          for (let i = 0; i < n; i++) {
+            const c = makeCanvas(64, 32);
+            c.ctx.drawImage(img, i * 64, row * 32, 64, 32, 0, 0, 64, 32);
+            tex.addCanvas(`tile_${kind}_${i}`, c.canvas);
+          }
+        });
+        this.registry.set('ground:platform_ref', true);
+      } else console.warn(`[sprites] ${pf.file} mide ${img.width}×${img.height}; se esperaba 768 × ${PLATFORM_ROWS.length * 32}. Se usa el andén de antes.`);
     }
 
     // ── Objetos ──

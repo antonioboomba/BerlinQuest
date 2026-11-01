@@ -266,11 +266,21 @@ export abstract class WorldScene extends Phaser.Scene {
       canvas.height = height;
       const ctx = canvas.getContext('2d')!;
       ctx.imageSmoothingEnabled = false;
+      const variants = new Map<string, number>(); // nº de variantes de cada tipo (3 las procedurales; las del atlas, las suyas)
+      const count = (k: string) => {
+        let n = variants.get(k);
+        if (n === undefined) {
+          n = 0;
+          while (this.textures.exists(`tile_${k}_${n}`)) n++;
+          variants.set(k, n);
+        }
+        return n;
+      };
       for (let y = 0; y < h; y++)
         for (let x = 0; x < w; x++) {
           const k = kindAt(x, y);
           if (!k) continue;
-          const v = (x * 7 + y * 13) % 3;
+          const v = (x * 7 + y * 13) % count(k);
           const src = this.textures.get(`tile_${k}_${v}`).getSourceImage() as HTMLCanvasElement;
           const s = toScreen(x, y);
           ctx.drawImage(src, s.x - HALF_W - minX, s.y - minY);

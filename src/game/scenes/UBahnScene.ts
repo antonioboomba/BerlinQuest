@@ -23,6 +23,22 @@ const BENCH1 = { seat: { x: 8, y: 2.45 }, at: { x: 8, y: 3.05 } };
 const BENCH2 = { seat: { x: 2.45, y: 7 }, at: { x: 3.05, y: 7 } };
 const STOP_X = 4; // el tren de Gleis 1 ocupa x 4..12 al detenerse
 
+/**
+ * Suelo del andén reproducido de la referencia: vía, borde con franja táctil y losas, con una guía táctil a lo largo
+ * de Gleis 1 (y = 3) y otra a lo largo de Gleis 2 (x = 3) que se cruzan en (3, 3).
+ */
+function platformFloor(x: number, y: number): string {
+  if (y === 0) return 'pfTrackX';
+  if (x === 0) return 'pfTrackY';
+  if (x === 1 && y === 1) return 'pfEdgeCorner';
+  if (y === 1) return 'pfEdgeX';
+  if (x === 1) return 'pfEdgeY';
+  if (x === 3 && y === 3) return 'pfGuideCross';
+  if (y === 3) return 'pfGuideX';
+  if (x === 3) return 'pfGuideY';
+  return 'pfSlab';
+}
+
 export class UBahnScene extends InteriorScene {
   readonly displayName = 'U-Bahnhof Moritzplatz (U8)';
   private train!: Phaser.GameObjects.Image;
@@ -41,7 +57,7 @@ export class UBahnScene extends InteriorScene {
     this.doorsOpen = false;
     this.arriving = false;
     this.buildRoom({
-      key: 'ubahn',
+      key: this.registry.get('ground:platform_ref') ? 'ubahn_ref' : 'ubahn',
       w: W,
       h: H,
       wallH: 160,
@@ -49,7 +65,7 @@ export class UBahnScene extends InteriorScene {
       background: '#0a0e18',
       wallTop: '#cfd8e0',
       edge: '#5a6278',
-      floor: (x, y) => (y === 0 ? 'trackX' : x === 0 ? 'trackY' : y === 1 ? 'edgeX' : x === 1 ? 'edgeY' : 'slab'),
+      floor: this.registry.get('ground:platform_ref') ? platformFloor : (x, y) => (y === 0 ? 'trackX' : x === 0 ? 'trackY' : y === 1 ? 'edgeX' : x === 1 ? 'edgeY' : 'slab'),
       back: (ctx, w, h) => this.paintWall(ctx, w, h, 'GLEIS 1'),
       side: (ctx, w, h) => this.paintWall(ctx, w, h, 'GLEIS 2'),
     });

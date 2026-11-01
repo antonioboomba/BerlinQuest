@@ -69,8 +69,26 @@ export interface AssetManifest {
     sidewalk_ref?: { file: string; enabled: boolean; x0: number };
     /** adoquines de la calzada reproducidos de la referencia: atlas de N baldosas 64×32 en fila */
     cobble_ref?: { file: string; enabled: boolean };
+    /** andén del U-Bahn reproducido de la referencia: atlas de 9 filas × 12 baldosas 64×32 (ver PLATFORM_ROWS) */
+    platform_ref?: { file: string; enabled: boolean };
   };
 }
+
+/**
+ * Filas del atlas del andén (art-source/anden/platform_atlas.cjs): [tipo de baldosa, nº de variantes].
+ * «X» corre a lo largo del eje x del mundo (vía en v = 0); «Y» a lo largo del eje y (vía en u = 0).
+ */
+export const PLATFORM_ROWS: [string, number][] = [
+  ['pfTrackX', 5],
+  ['pfTrackY', 5],
+  ['pfEdgeX', 5],
+  ['pfEdgeY', 5],
+  ['pfEdgeCorner', 1],
+  ['pfSlab', 12],
+  ['pfGuideX', 6],
+  ['pfGuideY', 2],
+  ['pfGuideCross', 1],
+];
 
 /** Tamaño máximo de un objeto externo (evita cargar ilustraciones a alta resolución por error). */
 export const PROP_MAX = 160;
