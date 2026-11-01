@@ -252,7 +252,7 @@ export class StreetScene extends WorldScene {
     // acera sur y plaza
     for (const x of [9.5, 10.5, 11.5]) this.placeProp('bollard', x, 9.2, { block: 0.25 });
     this.placeProp('street_sign', 12.6, 9.3, { block: 0.3 });
-    this.placeProp('litfass', 20.6, 10.4, { block: 0.8 });
+    this.placeProp(this.propKey('poster_techno', 'litfass'), 20.6, 10.4, { block: 0.8 }); // cartel «Techno Night» (sin el PNG, la columna de anuncios)
     this.placeProp(this.propKey('bike_green_cargo', 'bike_green'), 17.2, 9.55, { block: [0.9, 0.4] });
     this.placeProp(this.propKey('bike_red_locked', 'bike_red'), 18.1, 9.55, { block: [0.9, 0.4] });
     // más bicis aparcadas (sin dos iguales seguidas; lejos de puertas, del puesto y de la ruta de Jonas)
