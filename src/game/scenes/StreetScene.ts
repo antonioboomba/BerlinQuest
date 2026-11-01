@@ -252,7 +252,6 @@ export class StreetScene extends WorldScene {
     // acera sur y plaza
     for (const x of [9.5, 10.5, 11.5]) this.placeProp('bollard', x, 9.2, { block: 0.25 });
     this.placeProp('street_sign', 12.6, 9.3, { block: 0.3 });
-    this.placeProp('mailbox', 8.2, 9.4, { block: 0.4 });
     this.placeProp('litfass', 20.6, 10.4, { block: 0.8 });
     this.placeProp(this.propKey('bike_green_cargo', 'bike_green'), 17.2, 9.55, { block: [0.9, 0.4] });
     this.placeProp(this.propKey('bike_red_locked', 'bike_red'), 18.1, 9.55, { block: [0.9, 0.4] });
@@ -286,8 +285,8 @@ export class StreetScene extends WorldScene {
     this.placeProp(this.propKey('bench_berlin', 'bench'), 18.4, 12.2, { block: [1.9, 0.5] });
     this.placeProp(this.propKey('bench_berlin', 'bench'), 21.6, 12.2, { block: [1.9, 0.5] });
     this.placeProp(this.propKey('bin_berlin', 'bin'), 9.5, 12.3, { block: 0.4 });
-    // más papeleras: entre los dos bancos del este, junto al cartel KREUZBERG y a la salida del U-Bahn
-    for (const [x, y] of [[20.0, 12.3], [13.6, 9.35], [5.5, 10.3]]) this.placeProp(this.propKey('bin_berlin', 'bin'), x, y, { block: 0.4 });
+    // más papeleras: junto al cartel KREUZBERG y a la salida del U-Bahn
+    for (const [x, y] of [[13.6, 9.35], [5.5, 10.3]]) this.placeProp(this.propKey('bin_berlin', 'bin'), x, y, { block: 0.4 });
     // más jardineras en huecos libres: entre la terraza del Kater y la puerta del club, y en la fila de bancos de la plaza
     const planterBlock: number | [number, number] = this.registry.get('prop:planter_berlin') ? [1.2, 0.4] : 0.5;
     const planters: [string, number, number][] = [
