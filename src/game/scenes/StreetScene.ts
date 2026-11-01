@@ -285,8 +285,8 @@ export class StreetScene extends WorldScene {
     this.placeProp(this.propKey('bench_berlin', 'bench'), 18.4, 12.2, { block: [1.9, 0.5] });
     this.placeProp(this.propKey('bench_berlin', 'bench'), 21.6, 12.2, { block: [1.9, 0.5] });
     this.placeProp(this.propKey('bin_berlin', 'bin'), 9.5, 12.3, { block: 0.4 });
-    // más papeleras: junto al cartel KREUZBERG y a la salida del U-Bahn
-    for (const [x, y] of [[13.6, 9.35], [5.5, 10.3]]) this.placeProp(this.propKey('bin_berlin', 'bin'), x, y, { block: 0.4 });
+    // más papeleras: junto al cartel KREUZBERG
+    for (const [x, y] of [[13.6, 9.35]]) this.placeProp(this.propKey('bin_berlin', 'bin'), x, y, { block: 0.4 });
     // más jardineras en huecos libres: entre la terraza del Kater y la puerta del club, y en la fila de bancos de la plaza
     const planterBlock: number | [number, number] = this.registry.get('prop:planter_berlin') ? [1.2, 0.4] : 0.5;
     const planters: [string, number, number][] = [
