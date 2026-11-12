@@ -1,135 +1,124 @@
 # BERLIN QUEST — Learn to Survive
 
-RPG isométrico en pixel art para aprender alemán (A1 → B2) viviendo en Berlín.
+An isometric pixel-art RPG for learning German (A1 → B2) by living in Berlin.
 
-![Calle de Kreuzberg de noche: Späti, Bürgeramt, bar Kater Karlo y el canal](docs/screenshots/street.png)
+![Kreuzberg street at night: Späti, Bürgeramt, Kater Karlo bar and the canal](docs/screenshots/street.png)
 
-Llegas a Kreuzberg con 48 € en el bolsillo. Consigue tu primer turno en el bar, empadrónate en el
-Bürgeramt, monta tu habitación en la WG y muévete en U-Bahn hasta Alexanderplatz, todo hablando alemán.
+You arrive in Kreuzberg with €48 in your pocket. Land your first shift at the bar, register your address at
+the Bürgeramt, set up your room in the WG and ride the U-Bahn to Alexanderplatz, all while speaking German.
 
-## Capturas
+## Getting started
 
-| | |
-|---|---|
-| ![Bar Kater Karlo](docs/screenshots/bar.png) | ![Bürgeramt Kreuzberg](docs/screenshots/amt.png) |
-| **Bar «Kater Karlo»** · tu primer turno: sirve bebidas y cobra en alemán | **Bürgeramt** · número de espera, formularios y la Anmeldung |
-| ![U-Bahnhof Moritzplatz](docs/screenshots/ubahn.png) | ![Vagón de la U8](docs/screenshots/train.png) |
-| **U-Bahnhof Moritzplatz (U8)** · el andén y la revisora | **U8** · anuncios de «Nächster Halt» |
-| ![Tu WG](docs/screenshots/wg.png) | ![Alexanderplatz](docs/screenshots/alex.png) |
-| **Tu WG** · coloca tus cosas y aprende el vocabulario de casa | **Alexanderplatz** · Weltzeituhr, hotel y conexión con la U8 |
-
-## Cómo jugar
-
-Hecho con **Phaser 3 + TypeScript + Vite**.
+Built with **Phaser 3 + TypeScript + Vite**.
 
 ```bash
 npm install
-npm run dev        # juego Phaser:          http://localhost:5173/
-                   # versión clásica React:  http://localhost:5173/classic.html
+npm run dev        # Phaser game:           http://localhost:5173/
+                   # classic React version: http://localhost:5173/classic.html
 npm run build
 ```
 
-## Controles
+## Controls
 
-| Tecla | Acción |
+| Key | Action |
 |---|---|
-| WASD / flechas | Caminar (Shift = correr) |
-| E / Espacio | Interactuar, avanzar diálogo, elegir |
-| 1–5, ↑↓, Enter | Elegir respuesta o bebida |
-| M · I · P | Mapa · Inventario · Progreso |
-| T | Mostrar/ocultar traducciones |
-| ESC | Pausa (nivel A1–B2, voz, nombre, reiniciar) |
+| WASD / arrow keys | Walk (Shift = run) |
+| E / Space | Interact, advance dialogue, choose |
+| 1–5, ↑↓, Enter | Pick an answer or a drink |
+| M · I · P | Map · Inventory · Progress |
+| T | Show/hide translations |
+| ESC | Pause (level A1–B2, voice, name, restart) |
 
-En pantallas táctiles aparecen un joystick virtual y un botón E.
+On touch screens, a virtual joystick and an E button appear.
 
-## Juego Phaser (`src/game/`)
+## Phaser game (`src/game/`)
 
 ```
 src/game/
-├── main.ts              Configuración de Phaser (pixelArt, escalado RESIZE)
-├── iso.ts               Proyección isométrica 2:1; el mundo se simula en coordenadas cartesianas
-├── art/                 Pixel art generado por código al arrancar
-│   ├── characters.ts      Avatares 48×88 · 20 frames (frente/espalda × quieto/caminar/cargar/sentado)
-│   ├── buildings.ts       Fachadas isométricas (ventanas, balcones, neones, letreros) y cajas genéricas
-│   ├── props.ts           Farolas, árboles, bicis, papeleras BSR, Litfaßsäule, mobiliario de bar, bebidas
-│   ├── tiles.ts           Adoquines, losas, madera, agua… pintados en coordenadas (u, v) de baldosa
+├── main.ts              Phaser config (pixelArt, RESIZE scaling)
+├── iso.ts               2:1 isometric projection; the world is simulated in Cartesian coordinates
+├── art/                 Pixel art generated in code at startup
+│   ├── characters.ts      48×88 avatars · 20 frames (front/back × idle/walk/carry/sit)
+│   ├── buildings.ts       Isometric facades (windows, balconies, neon, signs) and generic boxes
+│   ├── props.ts           Street lamps, trees, bikes, BSR bins, Litfaßsäule, bar furniture, drinks
+│   ├── tiles.ts           Cobblestones, slabs, wood, water… painted in (u, v) tile coordinates
 │   └── palette.ts · font.ts · pixel.ts
 ├── scenes/
-│   ├── BootScene.ts       Genera texturas y animaciones
-│   ├── WorldScene.ts      Base: movimiento, colisiones, cámara, interacción E, luces
-│   ├── StreetScene.ts     Calle de Kreuzberg: bar, Bürgeramt, U-Bahn, club, canal, NPCs
-│   ├── BarScene.ts        Interior del bar y misión «Tu primer turno»
-│   └── UIScene.ts         HUD, minimapa, bocadillos, diálogos, nevera, paneles, pausa
-├── world/               Actor (sprite animado + profundidad), NPC brains, colisiones + A*
-├── data/bar.ts          Bebidas, pedidos por nivel CEFR, diálogos en alemán
-└── state/GameState.ts   XP, dinero, vocabulario (SRS de src/engine), misión, guardado local
+│   ├── BootScene.ts       Generates textures and animations
+│   ├── WorldScene.ts      Base: movement, collisions, camera, E interaction, lights
+│   ├── StreetScene.ts     Kreuzberg street: bar, Bürgeramt, U-Bahn, club, canal, NPCs
+│   ├── BarScene.ts        Bar interior and the "Your first shift" mission
+│   └── UIScene.ts         HUD, minimap, speech bubbles, dialogues, fridge, panels, pause
+├── world/               Actor (animated sprite + depth), NPC brains, collisions + A*
+├── data/bar.ts          Drinks, orders by CEFR level, German dialogues
+└── state/GameState.ts   XP, money, vocabulary (SRS from src/engine), mission, local save
 ```
 
-### Dirección visual (estilo «social sim» isométrico)
+### Art direction (isometric "social sim" style)
 
-- Baldosas de **64×32** y avatares de **48×88** px (frames), cabeza grande y contorno oscuro.
-- Zoom de cámara en pasos de 0,5 (2× en 1600×900) para que los personajes se lean bien.
-- Paleta pastel de atardecer: tres tonos por cara isométrica (techo claro, fachada media, lateral oscuro).
-- Tipografía: **DotGothic16** (OFL, vía `@fontsource/dotgothic16`, servida localmente): pixel, nítida,
-  con «ß», umlauts y «€» inequívocos. Tamaños múltiplos de 4 (16/20/24/28 px).
-  No se usa `letterSpacing` de Phaser: dibuja letra a letra y rompe emojis y glifos.
+- **64×32** tiles and **48×88** px avatars (frames), big heads and dark outlines.
+- Camera zoom in 0.5 steps (2× at 1600×900) so characters stay readable.
+- Pastel sunset palette: three tones per isometric face (light roof, mid facade, dark side).
+- Font: **DotGothic16** (OFL, via `@fontsource/dotgothic16`, served locally): crisp pixel type
+  with unambiguous "ß", umlauts and "€". Sizes are multiples of 4 (16/20/24/28 px).
+  Phaser's `letterSpacing` is not used: it draws letter by letter and breaks emoji and glyphs.
 
-### Sprites externos (PNG profesionales)
+### External sprites (hand-made PNGs)
 
-- **Dónde va el protagonista:** `public/assets/characters/player.png` (formato y medidas en
-  `public/assets/characters/README.md`: PNG transparente de 960×88, 20 frames de 48×88).
-- **Probarlo sin tocar el juego:** `npm run dev` y abrir http://localhost:5173/sprite-test.html
-  (20 frames con marcadores de pies, mano, retrato y bocadillo; 4 direcciones; paseo con WASD;
-  también admite arrastrar un PNG).
-- **Activarlo en el juego:** en `public/assets/manifest.json` poner `"enabled": true` en `player`.
-  Mientras sea `false`, el juego sigue usando el arte procedural.
-- **Respaldo automático:** si el PNG falta o no mide 960×88, `BootScene` avisa en la consola y genera el
-  arte procedural. Código: `src/game/art/sprites.ts` y `src/game/scenes/BootScene.ts`.
+- **Where the protagonist goes:** `public/assets/characters/player.png` (format and sizes in
+  `public/assets/characters/README.md`: transparent 960×88 PNG, 20 frames of 48×88).
+- **Test it without touching the game:** `npm run dev` and open http://localhost:5173/sprite-test.html
+  (20 frames with foot, hand, portrait and speech-bubble markers; 4 directions; walk with WASD;
+  you can also drag in a PNG).
+- **Enable it in the game:** in `public/assets/manifest.json` set `"enabled": true` on `player`.
+  While it is `false`, the game keeps using the procedural art.
+- **Automatic fallback:** if the PNG is missing or isn't 960×88, `BootScene` logs a warning and generates
+  the procedural art. Code: `src/game/art/sprites.ts` and `src/game/scenes/BootScene.ts`.
 
-### Sustituir el arte procedural por spritesheets dibujados
+### Replacing procedural art with drawn spritesheets
 
-Todas las texturas se registran en `BootScene` con claves estables (`player`, `mehmet`, `lamp`, `tree0`,
-`drink_bier`, `tile_cobble_0`…). Para usar arte hecho a mano basta con cargar un PNG con la misma clave
-y el mismo formato de frames (personajes: 20 frames de 48×88 en una fila; ver `art/characters.ts`).
+Every texture is registered in `BootScene` under a stable key (`player`, `mehmet`, `lamp`, `tree0`,
+`drink_bier`, `tile_cobble_0`…). To use hand-made art, just load a PNG with the same key and the same
+frame layout (characters: 20 frames of 48×88 in one row; see `art/characters.ts`).
 
-## Versión clásica (React, `classic.html`)
+## Classic version (React, `classic.html`)
 
-Misión del Bürgeramt por diálogos, repaso SRS y panel de progreso.
+Dialogue-driven Bürgeramt mission, SRS review and a progress panel.
 
-### Arquitectura
+### Architecture
 
 ```
 src/
-├── engine/            Motor (sin React): lógica pura y testeable
-│   ├── types.ts         Tipos: jugador, nodos de diálogo, misiones, SRS…
-│   ├── state.ts         Reducer del juego + comprobación automática de logros
-│   ├── dialogue.ts      Resolución de textos por nivel, condiciones, efectos de sesión
-│   ├── evaluate.ts      Corrección: huecos, escritura libre por reglas, deletreo
-│   ├── srs.ts           Repetición espaciada (SM-2 simplificado)
-│   ├── progression.ts   XP, niveles, rangos de habilidad, desbloqueos
-│   ├── storage.ts       Guardado en localStorage, migración, exportar/importar
-│   └── npc/provider.ts  Interfaz de conversación con NPCs (guionizada; lista para IA)
-├── data/              Contenido educativo (solo datos)
-│   ├── missions/        buergeramt.ts (jugable), upcoming.ts (bar, WG, club)
-│   ├── vocabulary.ts    Vocabulario con artículo, plural, ejemplo y nivel
+├── engine/            Engine (no React): pure, testable logic
+│   ├── types.ts         Types: player, dialogue nodes, missions, SRS…
+│   ├── state.ts         Game reducer + automatic achievement checks
+│   ├── dialogue.ts      Per-level text resolution, conditions, session effects
+│   ├── evaluate.ts      Grading: cloze, rule-based free writing, spelling
+│   ├── srs.ts           Spaced repetition (simplified SM-2)
+│   ├── progression.ts   XP, levels, skill ranks, unlocks
+│   ├── storage.ts       localStorage saves, migration, export/import
+│   └── npc/provider.ts  NPC conversation interface (scripted; AI-ready)
+├── data/              Learning content (data only)
+│   ├── missions/        buergeramt.ts (playable), upcoming.ts (bar, WG, club)
+│   ├── vocabulary.ts    Vocabulary with article, plural, example and level
 │   └── locations, items, achievements, countries, backgrounds
-├── screens/           Pantallas (bienvenida, creación, mapa, misión, vocabulario, progreso)
-└── components/        UI reutilizable (avatar, transcripción, paneles de respuesta…)
+├── screens/           Screens (welcome, character creation, map, mission, vocabulary, progress)
+└── components/        Reusable UI (avatar, transcript, answer panels…)
 ```
 
-## Añadir una misión
+## Adding a mission
 
-1. Crea `src/data/missions/<id>.ts` con un objeto `Mission` y su lista de nodos.
-2. Tipos de nodo: `npc`, `narration`, `choice`, `cloze`, `free`, `spell`, `branch`, `end`.
-3. Los textos aceptan variantes por nivel: `{ A1: '…', B1: '…' }` (se usa la más alta ≤ nivel del jugador).
-4. Regístrala en `src/data/missions/index.ts` y enlázala desde `locations.ts`.
+1. Create `src/data/missions/<id>.ts` with a `Mission` object and its list of nodes.
+2. Node types: `npc`, `narration`, `choice`, `cloze`, `free`, `spell`, `branch`, `end`.
+3. Texts accept per-level variants: `{ A1: '…', B1: '…' }` (the highest one ≤ the player's level is used).
+4. Register it in `src/data/missions/index.ts` and link it from `locations.ts`.
 
-Las reglas de escritura libre (`FreeRule`) reciben el texto en minúsculas, sin puntuación y con umlauts
-transcritos (`ü → ue`, `ß → ss`).
+Free-writing rules (`FreeRule`) receive the text lowercased, without punctuation and with umlauts
+transliterated (`ü → ue`, `ß → ss`).
 
-## IA para NPCs
+## AI for NPCs
 
-`NpcConversationProvider` (en `engine/npc/provider.ts`) recibe el nodo (objetivo, reglas, respuestas modelo),
-el texto del jugador y el contexto, y devuelve la réplica del NPC más la evaluación. Hoy se usa
-`scriptedProvider` (offline). Un proveedor con LLM puede implementar la misma interfaz y usar el
-guionizado como alternativa si falla.
+`NpcConversationProvider` (in `engine/npc/provider.ts`) receives the node (goal, rules, model answers),
+the player's text and the context, and returns the NPC's reply plus the evaluation. Today it uses
+`scriptedProvider` (offline). An LLM-backed provider can implement the same interface and fall back to
+the scripted one if it fails.
