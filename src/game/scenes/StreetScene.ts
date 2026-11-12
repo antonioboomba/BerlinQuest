@@ -4,7 +4,8 @@ import { makeCanvas, poly, px, rect, shade } from '../art/pixel';
 import { depthOf, HALF_H, HALF_W, TILE_H, TILE_W, toScreen } from '../iso';
 import { GameState } from '../state/GameState';
 import { Actor } from '../world/Actor';
-import { BenchBrain, ChatBrain, PatrolBrain, StaticBrain, type Brain } from '../world/Npc';
+import { StaticBrain, type Brain } from '../world/Npc';
+import { Rat } from '../world/Rat';
 import { WorldScene } from './WorldScene';
 
 // Manzana compacta de Kreuzberg: una fila de edificios, calle adoquinada, plaza con U-Bahn y canal.
@@ -37,6 +38,7 @@ function doorPos(b: PlacedBuilding) {
 export class StreetScene extends WorldScene {
   readonly displayName = 'Kreuzberg';
   private brains: Brain[] = [];
+  private rats: Rat[] = [];
   private anna: Actor | null = null;
 
   constructor() {
@@ -53,7 +55,7 @@ export class StreetScene extends WorldScene {
     this.brains = [];
     this.cameras.main.setBackgroundColor(PAL.night);
     // noche oscura y misteriosa: solo se ve bien lo que alumbran farolas, ventanas y neones
-    this.enableNight(0x04050c, 0.74);
+    this.enableNight(0x04050c, 0.64);
 
     const ref = this.registry.get('ground:sidewalk_ref') as { x0: number; cols: number; south: boolean } | undefined;
     const cobbles = this.registry.get('ground:cobble_ref') as number | undefined;
@@ -98,7 +100,7 @@ export class StreetScene extends WorldScene {
     const br = toScreen(MAP_W, 0);
     this.cameras.main.setBounds(tl.x - 64, -260, br.x - tl.x + 128, toScreen(MAP_W, MAP_H).y + 300);
     this.buildNight();
-    this.addFog(52, '#a3abc0', 0.55); // bastante niebla, más densa sobre el canal y la calle
+    this.addFog(40, '#a3abc0', 0.42); // niebla moderada, más densa sobre el canal y la calle
 
     this.objectivePoi = () => {
       const q = GameState.data.quest;
@@ -223,14 +225,9 @@ export class StreetScene extends WorldScene {
   }
 
   private buildStreetFurniture() {
-    // farolas berlinesas (PNG externo; sin él, la procedural). Sin farolas delante del Späti,
-    // el Bürgeramt y el bar: solo la del club en la acera norte y las dos de la plaza.
+    // farolas berlinesas (PNG externo; sin él, la procedural). Sin farolas delante del Späti, el Bürgeramt,
+    // el bar ni el club (la de la acera norte, junto al Türsteher, se quitó): solo las dos de la plaza.
     const lamp = this.propKey('lamp_berlin', 'lamp');
-    for (const x of [21]) {
-      this.placeProp(lamp, x, 5.75, { block: 0.3 });
-      const s = toScreen(x, 5.75);
-      this.addGlow(s.x, s.y, LAMP_ORANGE, 130, 0.42, -90000);
-    }
     for (const x of [7, 19]) {
       this.placeProp(lamp, x, 9.25, { block: 0.3 });
       const s = toScreen(x, 9.25);
@@ -245,17 +242,17 @@ export class StreetScene extends WorldScene {
     this.placeProp(this.propKey('planter_berlin', 'planter0'), 6.6, 4.55, { block: this.registry.get('prop:planter_berlin') ? [1.2, 0.4] : 0.5 });
     this.placeProp(this.propKey('planter_berlin', 'planter1'), 9.4, 4.55, { block: this.registry.get('prop:planter_berlin') ? [1.2, 0.4] : 0.5 });
     this.placeProp(this.propKey('table_berlin', 'terrace_table'), 12.9, 4.75, { block: 0.6 });
-    this.placeProp('chair', 13.5, 4.85);
+    this.placeProp(this.propKey('spati_chair', 'chair'), 13.5, 4.85);
     this.placeProp(this.propKey('table_berlin', 'terrace_table'), 16.4, 4.75, { block: 0.6 });
-    this.placeProp('chair', 15.8, 4.85, { flip: true });
+    this.placeProp(this.propKey('spati_chair', 'chair'), 15.8, 4.85, { flip: true });
     this.placeProp(this.propKey('bin_berlin', 'bin'), 23.4, 4.6, { block: 0.4 });
     // acera sur y plaza
     for (const x of [9.5, 10.5, 11.5]) this.placeProp('bollard', x, 9.2, { block: 0.25 });
-    this.placeProp('street_sign', 12.6, 9.3, { block: 0.3 });
+    this.placeProp(this.propKey('sign_kreuzberg', 'street_sign'), 12.6, 9.3, { block: 0.3 }); // placa KREUZBERG de la referencia (sin el PNG, la procedural)
     this.placeProp(this.propKey('poster_techno', 'litfass'), 20.6, 10.4, { block: 0.8 }); // cartel «Techno Night» (sin el PNG, la columna de anuncios)
     this.placeProp(this.propKey('bike_green_cargo', 'bike_green'), 17.2, 9.55, { block: [0.9, 0.4] });
     this.placeProp(this.propKey('bike_red_locked', 'bike_red'), 18.1, 9.55, { block: [0.9, 0.4] });
-    // más bicis aparcadas (sin dos iguales seguidas; lejos de puertas, del puesto y de la ruta de Jonas)
+    // más bicis aparcadas (sin dos iguales seguidas; lejos de puertas y del puesto)
     const bikes: [string, string, number, number][] = [
       ['bike_red_locked', 'bike_red', 10.4, 4.75],
       ['bike_turquoise', 'bike_blue', 11.3, 4.75],
@@ -472,50 +469,37 @@ export class StreetScene extends WorldScene {
     );
     this.anna = anna;
     const home = doorPos(BUILDINGS[0]);
-    // en la invitación de la Misión 03, Anna espera junto a la puerta de casa
-    if (GameState.isActive('wg', 'invite')) {
-      anna.setPos(home.x + 0.9, home.y + 0.5);
-      this.brains.push(new StaticBrain(this, anna, 'SW', ['Hallo! Komm mal her!', '¡Hola! ¡Ven un momento!']));
-    } else this.brains.push(
-      new PatrolBrain(this, anna, [
-        { x: 8, y: 5.2, wait: 2, say: ['Wieder geschlossen…', 'Otra vez cerrado…'] },
-        { ...doorPos(BUILDINGS[2]), hide: 12 },
-        { x: 10, y: 7.2, wait: 1 },
-        { ...home, hide: 9 },
-      ]),
-    );
-
-    const jonas = npc('jonas', 'Jonas', 20, 7.5, () => 'jonas');
-    jonas.speed = 2;
+    // Anna es personaje de misión: siempre quieta junto a la puerta de la WG (no pasea ni entra en ningún edificio)
+    anna.setPos(home.x + 0.9, home.y + 0.5);
     this.brains.push(
-      new PatrolBrain(this, jonas, [
-        { x: 22, y: 7.6, wait: 1 },
-        { x: 4, y: 9.55, hide: 8 },
-        { x: 15, y: 9.8, wait: 2, say: ['Wo ist mein Handy…?', '¿Dónde está mi móvil…?'] },
-      ]),
+      new StaticBrain(this, anna, 'SW', GameState.isActive('wg', 'invite') ? ['Hallo! Komm mal her!', '¡Hola! ¡Ven un momento!'] : ['Hallo!', '¡Hola!']),
     );
 
     const klaus = npc('klaus', 'Klaus', 7.6, 12.2, () => 'klaus');
     klaus.speed = 1;
-    this.brains.push(new BenchBrain(this, klaus, { x: 7.6, y: 12.2 }, 'SW', { x: 8.6, y: 10.1 }));
-
-    const lea = npc('lea', 'Lea', 14.2, 5.7, () => 'lea');
-    const mia = npc('guest4', 'Mia', 15.1, 6.3, () => 'lea');
-    const chat: [string, string][] = [
-      ['Schön hier!', '¡Qué bonito!'],
-      ['Ja, stimmt!', '¡Sí, es verdad!'],
-      ['Gehen wir später in den Club?', '¿Vamos luego al club?'],
-      ['Klar! Um Mitternacht.', '¡Claro! A medianoche.'],
-    ];
-    this.brains.push(new ChatBrain(this, lea, mia, chat, true), new ChatBrain(this, mia, lea, chat, false));
+    // Klaus no se levanta: se queda siempre sentado en su banco (con sus poses: bastón, cigarro, periódico). Se
+    // sienta delante del centro del banco (lado del asiento) para que la cadera quede a la altura del asiento.
+    klaus.setPos(7.6, 12.5);
+    klaus.sit('SW');
+    this.brains.push(new StaticBrain(this, klaus, 'SW'));
 
     const cd = doorPos(BUILDINGS[3]);
     const bouncer = npc('bouncer', 'Türsteher', cd.x + 0.05, cd.y + 0.05, () => 'bouncer');
     this.brains.push(new StaticBrain(this, bouncer, 'SW', ['Heute nicht.', 'Hoy no.']));
+
+    // ratas correteando (cada una va y viene entre los puntos de su ruta): una junto al bordillo de la acera norte
+    // y otra en la orilla del canal al fondo de la plaza
+    this.rats = [];
+    if (this.textures.exists('rat')) {
+      const north = [{ x: 2, y: 5.8 }, { x: 5, y: 5.75 }, { x: 8.5, y: 5.8 }, { x: 11.5, y: 5.75 }, { x: 15, y: 5.8 }, { x: 19, y: 5.75 }, { x: 22.5, y: 5.8 }];
+      const canal = [{ x: 1.5, y: 12.62 }, { x: 4.5, y: 12.6 }, { x: 10.5, y: 12.62 }, { x: 15.5, y: 12.6 }, { x: 19.5, y: 12.62 }, { x: 22.5, y: 12.6 }];
+      for (const route of [north, canal]) this.rats.push(new Rat(this, route, () => this.player.pos));
+    }
   }
 
   protected worldUpdate(dt: number) {
     for (const b of this.brains) b.update(dt);
+    for (const r of this.rats) r.update(dt);
   }
 }
 

@@ -106,6 +106,18 @@ class GameStateImpl extends Phaser.Events.EventEmitter {
     } catch {
       /* partida corrupta o almacenamiento no disponible: empezamos de cero */
     }
+    // atajo de desarrollo: ?reset en la URL reinicia misiones y progreso, conservando nombre y ajustes
+    const url = new URL(window.location.href);
+    if (url.searchParams.has('reset')) {
+      this.data = { ...fresh(), name: this.data.name, settings: this.data.settings };
+      try {
+        localStorage.setItem(KEY, JSON.stringify(this.data));
+      } catch {
+        /* sin almacenamiento */
+      }
+      url.searchParams.delete('reset');
+      window.history.replaceState(null, '', url.toString());
+    }
   }
 
   save() {

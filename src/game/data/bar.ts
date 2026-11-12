@@ -102,10 +102,7 @@ export interface Dialog {
 export const SPEAKERS: Record<string, { name: string; role: string }> = {
   mehmet: { name: 'Mehmet', role: 'Dueño del bar' },
   anna: { name: 'Anna', role: 'Vecina' },
-  jonas: { name: 'Jonas', role: 'Estudiante' },
   klaus: { name: 'Klaus', role: 'Jubilado berlinés' },
-  lea: { name: 'Lea', role: 'DJ' },
-  guest4: { name: 'Mia', role: 'Amiga de Lea' },
   bouncer: { name: 'Türsteher', role: 'Portero del club' },
   sign: { name: 'Cartel', role: '' },
   empfang: { name: 'Frau Lange', role: 'Recepción del Bürgeramt' },
@@ -249,23 +246,6 @@ export const DIALOGS: Record<string, Dialog> = {
       c: { speaker: 'anna', de: 'Freut mich, {name}! Ich bin Anna. Ich wohne hier im Haus.', es: '¡Encantada, {name}! Soy Anna. Vivo aquí en este edificio.' },
     },
   },
-  jonas: {
-    start: 'a',
-    nodes: {
-      a: {
-        speaker: 'jonas',
-        de: { A1: 'Entschuldigung, wo ist die U-Bahn?', B1: 'Sorry, kurze Frage: Wo ist hier die nächste U-Bahn-Station?' },
-        es: { A1: 'Perdona, ¿dónde está el metro?', B1: 'Perdona, una pregunta rápida: ¿dónde está la estación de metro más cercana?' },
-        choices: [
-          { de: 'Da drüben, beim blauen Schild mit dem U.', es: 'Allí, junto al cartel azul con la U.', correct: true, next: 'ok', vocab: ['da_drueben'], feedback: '«da drüben» = allí, al otro lado.' },
-          { de: 'Ich bin die U-Bahn.', es: 'Soy el metro.', correct: false, feedback: '😄 Eso significa «soy el metro». Señala el lugar: «Da drüben…».' },
-          { de: 'Keine Ahnung, sorry.', es: 'Ni idea, lo siento.', next: 'meh' },
-        ],
-      },
-      ok: { speaker: 'jonas', de: 'Ah, super, danke! Tschüss!', es: '¡Ah, genial, gracias! ¡Chao!' },
-      meh: { speaker: 'jonas', de: 'Kein Problem, ich frag’ jemand anderen.', es: 'No pasa nada, le preguntaré a otra persona.' },
-    },
-  },
   klaus: {
     start: 'a',
     nodes: {
@@ -286,22 +266,6 @@ export const DIALOGS: Record<string, Dialog> = {
         next: 'b',
       },
       b: { speaker: 'klaus', de: 'Det is’ Kreuzberg. Hier is’ immer wat los.', es: 'Esto es Kreuzberg. Aquí siempre pasa algo. (det = das, wat = was)' },
-    },
-  },
-  lea: {
-    start: 'a',
-    nodes: {
-      a: {
-        speaker: 'lea',
-        de: { A1: 'Hey! Schön hier, oder?', B1: 'Hey! Schöner Abend heute, oder? Ich lege später im Club auf.' },
-        es: { A1: '¡Hey! Bonito esto, ¿no?', B1: '¡Hey! Qué noche más bonita, ¿no? Luego pincho en el club.' },
-        choices: [
-          { de: 'Ja, stimmt!', es: '¡Sí, es verdad!', next: 'b', vocab: ['stimmt'] },
-          { de: 'Nein, es ist kalt.', es: 'No, hace frío.', next: 'c' },
-        ],
-      },
-      b: { speaker: 'lea', de: 'Berlin im Herbst – einfach toll.', es: 'Berlín en otoño: simplemente genial.' },
-      c: { speaker: 'lea', de: 'Haha, typisch Berlin. Zieh dir was Warmes an!', es: 'Jaja, típico de Berlín. ¡Abrígate!' },
     },
   },
   bouncer: {

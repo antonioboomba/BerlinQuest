@@ -126,6 +126,8 @@ export class BarScene extends WorldScene {
       { rect: { x0: FRIDGE.x, y0: 0.2, x1: FRIDGE.x + 1, y1: 1.2 }, color: 0x3fa9ff },
     );
 
+    // insignia «!» sobre Mehmet cuando hay que hablar con él (el objetivo es el sitio delante de la barra)
+    this.objectiveActor = () => (GameState.isActive('shift', 'talk_boss', 'get_paid') ? this.mehmet : null);
     this.objectivePoi = () => {
       const q = GameState.data.quest;
       if (q.id === 'shift') {

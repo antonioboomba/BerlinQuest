@@ -2,6 +2,26 @@
 
 RPG isométrico en pixel art para aprender alemán (A1 → B2) viviendo en Berlín.
 
+![Calle de Kreuzberg de noche: Späti, Bürgeramt, bar Kater Karlo y el canal](docs/screenshots/street.png)
+
+Llegas a Kreuzberg con 48 € en el bolsillo. Consigue tu primer turno en el bar, empadrónate en el
+Bürgeramt, monta tu habitación en la WG y muévete en U-Bahn hasta Alexanderplatz, todo hablando alemán.
+
+## Capturas
+
+| | |
+|---|---|
+| ![Bar Kater Karlo](docs/screenshots/bar.png) | ![Bürgeramt Kreuzberg](docs/screenshots/amt.png) |
+| **Bar «Kater Karlo»** · tu primer turno: sirve bebidas y cobra en alemán | **Bürgeramt** · número de espera, formularios y la Anmeldung |
+| ![U-Bahnhof Moritzplatz](docs/screenshots/ubahn.png) | ![Vagón de la U8](docs/screenshots/train.png) |
+| **U-Bahnhof Moritzplatz (U8)** · el andén y la revisora | **U8** · anuncios de «Nächster Halt» |
+| ![Tu WG](docs/screenshots/wg.png) | ![Alexanderplatz](docs/screenshots/alex.png) |
+| **Tu WG** · coloca tus cosas y aprende el vocabulario de casa | **Alexanderplatz** · Weltzeituhr, hotel y conexión con la U8 |
+
+## Cómo jugar
+
+Hecho con **Phaser 3 + TypeScript + Vite**.
+
 ```bash
 npm install
 npm run dev        # juego Phaser:          http://localhost:5173/

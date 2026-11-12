@@ -127,6 +127,14 @@ export class AmtScene extends WorldScene {
       { rect: { x0: RECEPTION.x0, y0: RECEPTION.y0, x1: RECEPTION.x0 + 2, y1: RECEPTION.y0 + 1 }, color: 0x3b5bdb },
     );
     this.objectivePoi = () => this.objective();
+    // insignia «!» sobre quien atiende: la recepción al pedir número y el funcionario del puesto asignado
+    this.objectiveActor = () => {
+      const q = GameState.data.quest;
+      if (q.id !== 'anmeldung') return null;
+      if (q.step === 'ticket') return this.receptionist ?? null;
+      if (['get_wgb', 'form', 'wait'].includes(q.step)) return null;
+      return q.desk ? (this.officials[q.desk - 1] ?? null) : null;
+    };
     this.time.addEvent({ delay: 2000, loop: true, callback: () => this.savePosition() });
     this.events.once('shutdown', () => this.savePosition());
   }

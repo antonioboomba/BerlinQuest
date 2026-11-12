@@ -19,6 +19,11 @@ export interface ManifestEntry {
    * de frente y de espaldas. Sin él se usa la posición del arte procedural (HAND).
    */
   hand?: { front: [number, number]; back: [number, number] };
+  /**
+   * Opcional: animación de sentado con varias poses (fotogramas de frente 0-9; de espaldas se suma 10) y su
+   * velocidad en fotogramas por segundo. Sin ella, sentado es el fotograma 9 fijo.
+   */
+  sit?: { frames: number[]; rate: number };
 }
 
 /** Posición del objeto en la mano en píxeles del frame (x, y), de frente y de espaldas. */
@@ -120,7 +125,8 @@ export function addProceduralSheet(textures: Phaser.Textures.TextureManager, key
 }
 
 /** Animaciones «clave:front|back:anim» que usa el juego (Actor.play). */
-export function registerCharacterAnims(anims: Phaser.Animations.AnimationManager, key: string) {
+export function registerCharacterAnims(anims: Phaser.Animations.AnimationManager, key: string, sit?: ManifestEntry['sit']) {
+  const sitOk = !!sit && Array.isArray(sit.frames) && sit.frames.length > 0 && sit.frames.every((f) => Number.isInteger(f) && f >= 0 && f <= 9) && sit.rate > 0;
   for (const [side, off] of [['front', 0], ['back', 10]] as const) {
     const mk = (name: string, frames: readonly number[], rate: number) => {
       const k = `${key}:${side}:${name}`;
@@ -131,6 +137,7 @@ export function registerCharacterAnims(anims: Phaser.Animations.AnimationManager
     mk('walk', FRAMES.walk, 8);
     mk('carryIdle', FRAMES.carryIdle, 1);
     mk('carryWalk', FRAMES.carryWalk, 8);
-    mk('sit', FRAMES.sit, 1);
+    if (sitOk) mk('sit', sit!.frames, sit!.rate);
+    else mk('sit', FRAMES.sit, 1);
   }
 }

@@ -42,6 +42,8 @@ export abstract class WorldScene extends Phaser.Scene {
   minimap: MiniFeature[] = [];
   pois: Poi[] = [];
   objectivePoi: () => Pt | null = () => null;
+  /** personaje que tiene la misión cuando el punto de objetivo no está sobre él (p. ej. al otro lado de un mostrador) */
+  objectiveActor: () => Actor | null = () => null;
   private keys!: Record<string, Phaser.Input.Keyboard.Key>;
   private currentTarget: Interactable | null = null;
   private transitioning = false;
@@ -56,6 +58,11 @@ export abstract class WorldScene extends Phaser.Scene {
   private nightCfg = { color: 0x05060f, alpha: 0.7 };
   private fog: { img: Phaser.GameObjects.Image; vx: number; base: number; phase: number }[] = [];
   private marker: Phaser.GameObjects.Image | null = null;
+  /**
+   * Insignia «!» encima del personaje que tiene la misión: aquí solo se calcula dónde va (centro inferior, en
+   * coordenadas del mundo); la dibuja la interfaz a escala entera de píxeles para que se vea nítida con cualquier zoom.
+   */
+  questBadgePos: Pt | null = null;
   private standPos: Pt | null = null;
 
   abstract readonly displayName: string;
@@ -78,6 +85,7 @@ export abstract class WorldScene extends Phaser.Scene {
     this.fog = [];
     this.transitioning = false;
     this.marker = null;
+    this.questBadgePos = null;
     this.standPos = null;
     this.collision = new CollisionMap(bounds);
     const kb = this.input.keyboard!;
@@ -102,6 +110,21 @@ export abstract class WorldScene extends Phaser.Scene {
     this.scene.bringToTop('UI');
     // flecha de objetivo flotando sobre el destino actual
     this.marker = this.add.image(0, 0, 'marker').setOrigin(0.5, 1).setDepth(2e5).setVisible(false);
+  }
+
+  /** Personaje (no el jugador) que está en el punto de objetivo: la misión la tiene él. */
+  private questActor(poi: Pt): Actor | null {
+    let best: Actor | null = null;
+    let bd = 0.4;
+    for (const a of this.actors) {
+      if (a === this.player || !a.visible) continue;
+      const d = Math.hypot(a.wx - poi.x, a.wy - poi.y);
+      if (d < bd) {
+        bd = d;
+        best = a;
+      }
+    }
+    return best;
   }
 
   /** Sienta al jugador; al moverse se levanta y vuelve a standPos. */
@@ -367,10 +390,20 @@ export abstract class WorldScene extends Phaser.Scene {
     // marcador de objetivo
     if (this.marker) {
       const poi = this.objectivePoi();
-      if (poi && !blocking) {
+      const who = poi && !blocking && this.textures.exists('quest_badge') ? (this.objectiveActor() ?? this.questActor(poi)) : null;
+      if (who) {
+        // encima de la cabeza, flotando; se aparta mientras el personaje tiene un bocadillo de diálogo
+        const head = who.sprite.y - (who.sitting ? 70 : 84);
+        this.questBadgePos = who.bubble ? null : { x: who.sprite.x, y: head - 4 + Math.sin(this.time.now / 260) * 2 };
+        this.marker.setVisible(false);
+      } else if (poi && !blocking) {
+        this.questBadgePos = null;
         const s = toScreen(poi.x, poi.y);
         this.marker.setPosition(Math.round(s.x), Math.round(s.y - 104 + Math.sin(this.time.now / 220) * 6)).setVisible(true);
-      } else this.marker.setVisible(false);
+      } else {
+        this.marker.setVisible(false);
+        this.questBadgePos = null;
+      }
     }
   }
 

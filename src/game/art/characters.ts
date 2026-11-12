@@ -299,9 +299,7 @@ export const CHARACTERS: Record<string, CharStyle> = {
   player: { skin: '#f2c19e', hair: '#7a4a2a', hairStyle: 'short', top: '#3a5bb8', accent: '#f2ece4', jacket: true, pants: '#2f3f6b', shoes: '#f2ece4', backpack: '#d9534f' },
   mehmet: { skin: '#d9a07a', hair: '#2a1d18', hairStyle: 'short', top: '#4a4a58', accent: '#f2ece4', sleeves: 'short', pants: '#2a2a38', shoes: '#3a2a22', beard: true, apron: '#2b2b38' },
   anna: { skin: '#f6caa6', hair: '#3a2418', hairStyle: 'bun', top: '#e0675a', accent: '#ffd77a', pants: '#3a4a7a', shoes: '#2b2b36', skirt: true },
-  jonas: { skin: '#fbd9bf', hair: '#e8c06a', hairStyle: 'mohawk', top: '#4f9a5a', accent: '#ffd77a', sleeves: 'short', pants: '#4a4a5a', shoes: '#f2ece4', headphones: true, backpack: '#3b5bdb' },
   klaus: { skin: '#f0c4a2', hair: '#d6d6dc', hairStyle: 'cap', accent: '#3f5a7a', top: '#9a7a52', jacket: true, pants: '#5a5048', shoes: '#3a2a22', beard: true },
-  lea: { skin: '#b07a52', hair: '#2a1d18', hairStyle: 'curly', top: '#a77bff', accent: '#5fe39a', pants: '#2b2b38', shoes: '#ff5fd6', glasses: true },
   guest1: { skin: '#f6caa6', hair: '#b06a3a', hairStyle: 'long', top: '#3fa08a', pants: '#3a3a4a', shoes: '#2b2b36' },
   guest2: { skin: '#8a5a3a', hair: '#1c1410', hairStyle: 'beanie', accent: '#ff7a2a', top: '#5a5a7a', jacket: true, pants: '#6a5a40', shoes: '#f2ece4' },
   guest3: { skin: '#f2c19e', hair: '#d9573a', hairStyle: 'short', top: '#f0c95a', accent: '#7a4a2a', sleeves: 'short', pants: '#3a4a7a', shoes: '#86532f', glasses: true },
@@ -314,5 +312,6 @@ export const CHARACTERS: Record<string, CharStyle> = {
   citizen2: { skin: '#f2c19e', hair: '#5a3220', hairStyle: 'cap', accent: '#3fa04a', top: '#e0675a', jacket: true, pants: '#4a4a5a', shoes: '#2b2b36', beard: true },
   sophie: { skin: '#f6caa6', hair: '#e8a33a', hairStyle: 'long', top: '#5fc2c0', accent: '#ffffff', sleeves: 'short', pants: '#3a3a5a', shoes: '#e0675a', glasses: true },
   emre: { skin: '#c48a62', hair: '#1c1410', hairStyle: 'short', top: '#2f2f3f', accent: '#ffd77a', jacket: true, pants: '#4a5a7a', shoes: '#f2ece4', beard: true },
+  kontrolleurin: { skin: '#d9a07a', hair: '#7a4a2a', hairStyle: 'bun', top: '#2a2c48', accent: '#e0b83a', jacket: true, pants: '#24263c', shoes: '#2b2b36' },
   bouncer: { skin: '#6a4028', hair: '#151018', hairStyle: 'bald', top: '#24242e', accent: '#3a3a48', jacket: true, pants: '#1c1c24', shoes: '#151018', beard: true, glasses: true },
 };

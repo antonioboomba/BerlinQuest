@@ -85,6 +85,8 @@ export class UIScene extends Phaser.Scene {
   private bubbles = new Map<number, BubbleView>();
   /** la escena activa tiene niebla: diálogos ligeramente velados */
   private fogDialogs = false;
+  /** insignia «!» sobre el personaje de la misión (posición: WorldScene.questBadgePos) */
+  private questBadge: Phaser.GameObjects.Image | null = null;
   private toasts: Phaser.GameObjects.Container[] = [];
 
   private dialog: Phaser.GameObjects.Container | null = null;
@@ -134,6 +136,7 @@ export class UIScene extends Phaser.Scene {
   }
 
   create() {
+    this.questBadge = null; // si la escena se reinicia, la imagen anterior ya no existe
     this.cameras.main.setOrigin(0, 0).setZoom(uiZoom());
     this.buildHud();
     this.buildPrompt();
@@ -457,6 +460,25 @@ export class UIScene extends Phaser.Scene {
       g.fillStyle(0xb8c4de, 1).fillRoundedRect(10, 32, 28, 4, { tl: 0, tr: 0, bl: 6, br: 6 });
       this.prompt.setPosition(Math.round(s.x - w / 2), Math.round(s.y + (14 * cam.zoom) / d)).setVisible(true);
     } else this.prompt.setVisible(false);
+
+    // insignia «!» de misión: se usa la versión HD reducida con filtrado suave a su tamaño exacto en píxeles reales
+    // (sin el pixelado irregular de un zoom no entero); sin ella, la de 23x24 a escala entera de píxeles
+    const qb = world.questBadgePos;
+    const hd = this.textures.exists('quest_badge_hd');
+    if (qb && !this.isBlocking() && (hd || this.textures.exists('quest_badge'))) {
+      if (!this.questBadge) {
+        this.questBadge = this.add.image(0, 0, hd ? 'quest_badge_hd' : 'quest_badge').setOrigin(0, 0).setDepth(4);
+        if (hd) this.questBadge.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
+      }
+      const s = toUi(qb.x, qb.y);
+      const { width: bw, height: bh } = this.questBadge.frame;
+      // alto en píxeles reales: 36 px del mundo (Tony mide ~80), entero
+      const k = hd ? Math.round(cam.zoom * 36) / bh : Math.max(2, Math.round(cam.zoom * 1.5));
+      this.questBadge
+        .setScale(k / d)
+        .setPosition(Math.round(s.x * d - (bw * k) / 2) / d, Math.round(s.y * d - bh * k) / d)
+        .setVisible(true);
+    } else this.questBadge?.setVisible(false);
 
     this.drawBubbles(world, toUi);
     this.drawMinimap(world);

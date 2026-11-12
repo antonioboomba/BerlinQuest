@@ -19,8 +19,14 @@ const H = 11;
 const DOOR: Pt = { x: 12, y: 10.6 };
 const PLAN: Pt = { x: 13.4, y: 3.9 };
 const MACHINE: Pt = { x: 14.3, y: 6.1 };
-const BENCH1 = { seat: { x: 8, y: 2.45 }, at: { x: 8, y: 3.05 } };
-const BENCH2 = { seat: { x: 2.45, y: 7 }, at: { x: 3.05, y: 7 } };
+// bancos con respaldo mirando a las vías: uno se sienta por delante (lado de la vía)
+const BENCH1 = { seat: { x: 8, y: 2.45 }, at: { x: 8, y: 1.75 } };
+const BENCH2 = { seat: { x: 2.45, y: 7 }, at: { x: 1.75, y: 7 } };
+/** el banco va un poco detrás del asiento para que el respaldo tape la espalda de quien se sienta */
+const BACK = 0.08;
+/** más bancos de adorno (también sirven para sentarse): a lo largo de Gleis 1 y de Gleis 2 */
+const MORE_G1 = [5, 12.4];
+const MORE_G2 = [4.4, 9.6];
 const STOP_X = 4; // el tren de Gleis 1 ocupa x 4..12 al detenerse
 
 /**
@@ -98,6 +104,9 @@ export class UBahnScene extends InteriorScene {
     this.brains.push(new StaticBrain(this, p1, 'NE', ['Hallo!', '¡Hola!']));
     const p2 = this.addActor(new Actor(this, 'guest4', 'Fahrgast', 3.4, 9));
     this.brains.push(new StaticBrain(this, p2, 'NW'));
+    // empleada de la estación junto a la entrada, con el lector de billetes en la mano
+    const k = this.addActor(new Actor(this, 'kontrolleurin', 'Kontrolleurin', 12.6, 8.4));
+    this.brains.push(new StaticBrain(this, k, 'SW', ['Guten Abend! Gute Fahrt!', '¡Buenas noches! ¡Buen viaje!']));
 
     if (GameState.isActive('unterwegs', 'station')) GameState.setQuest('map');
     // si volvió a entrar estando ya en el andén, el tren vuelve a venir
@@ -252,8 +261,20 @@ export class UBahnScene extends InteriorScene {
       this.add.image(s.x, s.y - 160, key).setOrigin(0.5, 1).setDepth(1e5);
     }
 
-    this.placeProp('platform_bench', BENCH1.seat.x, BENCH1.seat.y, { block: [1.6, 0.5] });
-    this.placeProp('platform_bench', BENCH2.seat.x, BENCH2.seat.y, { block: [0.5, 1.6] });
+    // banco metálico de la referencia, visto por detrás (sin el PNG, el banco rojo sin respaldo); Gleis 2 en espejo
+    const bench = this.propKey('bench_ubahn', 'platform_bench');
+    this.placeProp(bench, BENCH1.seat.x, BENCH1.seat.y + BACK, { block: [1.6, 0.5] });
+    this.placeProp(bench, BENCH2.seat.x + BACK, BENCH2.seat.y, { block: [0.5, 1.6], flip: bench === 'bench_ubahn' });
+    const sitHere = (seat: Pt, facing: 'NE' | 'NW', at: Pt) =>
+      this.interactables.push({ x: at.x, y: at.y, radius: 1.1, label: () => (this.player.sitting ? null : 'Sentarse'), action: () => this.sitPlayer(seat, facing, at) });
+    for (const x of MORE_G1) {
+      this.placeProp(bench, x, BENCH1.seat.y + BACK, { block: [1.6, 0.5] });
+      sitHere({ x, y: BENCH1.seat.y }, 'NE', { x, y: BENCH1.at.y });
+    }
+    for (const y of MORE_G2) {
+      this.placeProp(bench, BENCH2.seat.x + BACK, y, { block: [0.5, 1.6], flip: bench === 'bench_ubahn' });
+      sitHere({ x: BENCH2.seat.x, y }, 'NW', { x: BENCH2.at.x, y });
+    }
     this.placeProp('netzplan', PLAN.x, PLAN.y - 0.6, { block: 0.8 });
     this.placeProp('ticket_machine', MACHINE.x + 0.6, MACHINE.y - 0.4, { block: 0.6 });
     this.placeProp(this.propKey('bin_berlin', 'bin'), 9.6, 4.2, { block: 0.4 });

@@ -3,7 +3,7 @@ import { CHARACTERS, FRAME_H, FRAME_W } from '../art/characters';
 import { PAL } from '../art/palette';
 import { glowCanvas, makeCanvas, rect } from '../art/pixel';
 import * as P from '../art/props';
-import { addProceduralSheet, handAnchor, PLATFORM_ROWS, propInfo, registerCharacterAnims, sheetError, type AssetManifest } from '../art/sprites';
+import { addProceduralSheet, handAnchor, PLATFORM_ROWS, propInfo, registerCharacterAnims, sheetError, type AssetManifest, type ManifestEntry } from '../art/sprites';
 import { TILE_VARIANTS, tileCanvas, type TileKind } from '../art/tiles';
 import { DRINKS } from '../data/bar';
 import { GameState } from '../state/GameState';
@@ -22,6 +22,11 @@ export class BootScene extends Phaser.Scene {
   preload() {
     // si el manifiesto falta, el juego sigue con el arte procedural
     this.load.json('asset_manifest', 'assets/manifest.json');
+    // insignia «!» sobre el personaje que tiene la misión (art-source/insignia); si falta, se usa la flecha
+    this.load.image('quest_badge', 'assets/ui/quest_badge.png');
+    this.load.image('quest_badge_hd', 'assets/ui/quest_badge_hd.png'); // versión grande, se dibuja con filtrado suave
+    // rata callejera (art-source/rata): 4 fotogramas de 32x17 andando; si falta, no sale ninguna rata
+    this.load.spritesheet('rat', 'assets/animals/rat.png', { frameWidth: 32, frameHeight: 17 });
   }
 
   create() {
@@ -71,6 +76,7 @@ export class BootScene extends Phaser.Scene {
 
     // ── Personajes: PNG externo aprobado y válido, o arte procedural de respaldo ──
     for (const [key, style] of Object.entries(CHARACTERS)) {
+      let sit: ManifestEntry['sit'];
       if (tex.exists(key)) {
         const err = sheetError(tex.get(key));
         if (err) {
@@ -81,13 +87,17 @@ export class BootScene extends Phaser.Scene {
           // la posición de la mano solo vale para el PNG que la define, no para el respaldo procedural
           const entry = this.manifest.characters?.[key];
           const hand = entry ? handAnchor(entry) : null;
+          sit = entry?.sit; // poses sentadas: solo valen para el PNG que las trae
           if (hand) this.registry.set(`hand:${key}`, hand);
           else if (entry?.hand) console.warn(`[sprites] ${key}: posición de mano no válida en el manifiesto; se usa la predeterminada.`);
         }
       }
       if (!tex.exists(key)) addProceduralSheet(tex, key, style);
-      registerCharacterAnims(this.anims, key);
+      registerCharacterAnims(this.anims, key, sit);
     }
+
+    if (tex.exists('rat') && !this.anims.exists('rat_walk'))
+      this.anims.create({ key: 'rat_walk', frames: this.anims.generateFrameNumbers('rat', { start: 0, end: 3 }), frameRate: 12, repeat: -1 });
 
     // ── Objetos externos: válidos → se registran; si no, se descartan y se usa el arte procedural ──
     for (const [key, entry] of Object.entries(this.manifest.props ?? {})) {

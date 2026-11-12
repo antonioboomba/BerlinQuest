@@ -23,14 +23,28 @@ const GREETINGS: [string, string][] = [
   ['Hi!', '¡Hola!'],
 ];
 
+/** Segundos mínimos entre dos mensajes espontáneos (saludos, comentarios, charlas) de un mismo personaje. */
+export const AMBIENT_GAP = 20;
+
 export abstract class Brain {
   greetCooldown = 0;
   engaged = false;
+  /** momento (ms del reloj de la escena) del último mensaje espontáneo */
+  private lastAmbient = -Infinity;
 
   constructor(
     protected scene: WorldScene,
     public actor: Actor,
   ) {}
+
+  /** Mensaje espontáneo: solo sale si han pasado AMBIENT_GAP segundos desde el anterior de este personaje. */
+  protected ambientSay(de: string, es: string, ms: number) {
+    const now = this.scene.time.now;
+    if (now - this.lastAmbient < AMBIENT_GAP * 1000) return false;
+    this.lastAmbient = now;
+    this.actor.say(de, es, ms);
+    return true;
+  }
 
   /** Reacción al acercarse el jugador: se para, le mira y saluda. */
   protected react(dt: number): boolean {
@@ -44,8 +58,8 @@ export abstract class Brain {
         this.onEngage();
         if (this.greetCooldown <= 0) {
           const g = GREETINGS[Math.floor(Math.random() * GREETINGS.length)];
-          this.actor.say(g[0], g[1], 2500);
-          this.greetCooldown = 12;
+          this.ambientSay(g[0], g[1], 2500);
+          this.greetCooldown = AMBIENT_GAP;
         }
       }
       if (!this.actor.sitting) {
@@ -87,7 +101,7 @@ export class PatrolBrain extends Brain {
   private arrived() {
     const wp = this.route[this.i];
     if (wp.face) this.actor.facing = wp.face;
-    if (wp.say) this.actor.say(wp.say[0], wp.say[1], 3000);
+    if (wp.say) this.ambientSay(wp.say[0], wp.say[1], 3000);
     if (wp.hide) {
       this.hidden = wp.hide;
       this.actor.setVisible(false);
@@ -146,7 +160,7 @@ export class BenchBrain extends Brain {
         this.state = 'away';
         this.actor.stand();
         this.actor.walkPath(this.scene.collision.findPath(this.actor.pos, this.stroll) ?? [this.stroll], () => {
-          this.actor.say('Hach ja…', 'Ay, sí…', 2000);
+          this.ambientSay('Hach ja…', 'Ay, sí…', 2000);
           this.scene.time.delayedCall(2500, () => {
             this.state = 'back';
             this.actor.walkPath(this.scene.collision.findPath(this.actor.pos, this.seat) ?? [this.seat], () => {
@@ -170,9 +184,10 @@ export class ChatBrain extends Brain {
     super(scene, actor);
     actor.face(partner.pos);
     actor.play();
-    // los dos hablan por turnos: frases pares el primero, impares el segundo
+    // los dos hablan por turnos (frases pares el primero, impares el segundo), una frase cada AMBIENT_GAP s entre
+    // los dos: cada uno habla cada 2 × AMBIENT_GAP, desfasados
     this.idx = speaksFirst ? 0 : 1;
-    this.t = speaksFirst ? 1.5 : 3.5;
+    this.t = speaksFirst ? 1.5 : 1.5 + AMBIENT_GAP;
   }
 
   update(dt: number) {
@@ -181,7 +196,7 @@ export class ChatBrain extends Brain {
     this.actor.play();
     this.t -= dt;
     if (this.t <= 0) {
-      this.t = 4;
+      this.t = 2 * AMBIENT_GAP;
       const line = this.lines[this.idx % this.lines.length];
       this.actor.say(line[0], line[1], 3000);
       this.idx += 2;
@@ -199,8 +214,8 @@ export class StaticBrain extends Brain {
 
   protected onEngage() {
     if (this.greet) {
-      this.actor.say(this.greet[0], this.greet[1], 2500);
-      this.greetCooldown = 10;
+      this.ambientSay(this.greet[0], this.greet[1], 2500);
+      this.greetCooldown = AMBIENT_GAP;
     }
   }
 
